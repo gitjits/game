@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
+	"github.com/go-git/go-git/plumbing/object"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	memory "github.com/go-git/go-git/v5/storage/memory"
@@ -158,11 +159,12 @@ func iterCommits(g *Game) GridTree {
 	// We need to know the initial HEAD to make sure we reset state before returning
 	initialHash := commit.Hash
 
-	for err == nil {
+    commits.ForEach(func (c *object.Commit) error {
 		fmt.Print(commit)
 		commit, err = commits.Next()
 		if err != nil {
-			continue
+            fmt.Println(err)
+			return err
 		}
 
 		// Revert to this specific commit
@@ -173,12 +175,16 @@ func iterCommits(g *Game) GridTree {
 		newNode.next = &output
 		output.parent = &newNode
 		grid, err := gitCurrentGrid(g)
-		_ = err
+        if err != nil {
+            fmt.Println(err)
+            return err
+        }
 		newNode.grid = grid
 
 		// Update root node
 		output = newNode
-	}
+        return nil
+	})
 
 	// Revert back to the original HEAD
 	worktree.Checkout(&git.CheckoutOptions{Hash: initialHash})
