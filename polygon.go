@@ -1,11 +1,11 @@
 package main
 
 import (
-	"math"
 	_ "embed"
-    "image"
-    "image/color"
+	"image"
+	"image/color"
 	_ "image/png"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -41,13 +41,13 @@ func genVertices(num int, centerX float32, centerY float32, r float64, hc color.
 }
 
 func drawPolygon(n int, x int, y int, r int, hc color.RGBA, screen *ebiten.Image) {
-    op := &ebiten.DrawTrianglesOptions{}
+	op := &ebiten.DrawTrianglesOptions{}
 	op.Address = ebiten.AddressUnsafe
 	indices := []uint16{}
 	for i := 0; i < n; i++ {
 		indices = append(indices, uint16(i), uint16(i+1)%uint16(n), uint16(n))
 	}
-    whiteImage := ebiten.NewImage(3, 3)
-    whiteImage.Fill(hc)
+	whiteImage := ebiten.NewImage(3, 3)
+	whiteImage.Fill(hc)
 	screen.DrawTriangles(genVertices(n, float32(x), float32(y), float64(r), hc), indices, whiteImage.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image), op)
 }
