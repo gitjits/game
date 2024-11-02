@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"image/color"
     _ "embed"
 	"log"
 	"math"
@@ -38,7 +39,7 @@ var (
 	ebitenImage *ebiten.Image
 )
 
-//go:embed tile.png
+//go:embed small_tile.png
 var TileIMG []byte
 
 func init() {
@@ -184,6 +185,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF});
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy
