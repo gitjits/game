@@ -1,6 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
+	//"math"
+
+	_ "embed"
+	"image"
 	"image/color"
 	_ "image/png"
 	"log"
@@ -34,6 +40,7 @@ func (g *Game) init() {
 
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitSetup(g)
+	fmt.Print("Setup Git repo!\n")
 }
 
 func (g *Game) Update() error {
@@ -42,6 +49,7 @@ func (g *Game) Update() error {
 	}
 
 	g.grid.Update()
+	iterCommits(g.repo)
 	return nil
 }
 

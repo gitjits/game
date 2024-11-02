@@ -15,54 +15,60 @@ const (
 )
 
 func CreateBranch(r *git.Repository, branchName string) error {
-    headRef, err := r.Head()
-    if err != nil {
-        return fmt.Errorf("failed to get HEAD: %w", err)
-    }
+	headRef, err := r.Head()
+	if err != nil {
+		return fmt.Errorf("failed to get HEAD: %w", err)
+	}
 
-    ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branchName), headRef.Hash())
+	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branchName), headRef.Hash())
 
-    err = r.Storer.SetReference(ref)
-    if err != nil {
-        return fmt.Errorf("failed to create branch: %w", err)
-    }
+	err = r.Storer.SetReference(ref)
+	if err != nil {
+		return fmt.Errorf("failed to create branch: %w", err)
+	}
 
-    return nil
+	return nil
 }
 
 func ListBranches(r *git.Repository) ([]string, error) {
-    branches := []string{}
-    refs, err := r.References()
-    if err != nil {
-        return nil, err
-    }
+	branches := []string{}
+	refs, err := r.References()
+	if err != nil {
+		return nil, err
+	}
 
-    refs.ForEach(func(ref *plumbing.Reference) error {
-        if ref.Name().IsBranch() {
-            branches = append(branches, ref.Name().Short())
-        }
-        return nil
-    })
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Name().IsBranch() {
+			branches = append(branches, ref.Name().Short())
+		}
+		return nil
+	})
 
-    return branches, nil
+	return branches, nil
 }
 
 func CheckoutBranch(r *git.Repository, branchName string) error {
-    w, err := r.Worktree()
-    if err != nil {
-        return fmt.Errorf("failed to get worktree: %w", err)
-    }
+	w, err := r.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
 
-    opts := &git.CheckoutOptions{
-        Branch: plumbing.NewBranchReferenceName(branchName),
-        Force:  false,
-    }
+	opts := &git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(branchName),
+		Force:  false,
+	}
 
-    if err := w.Checkout(opts); err != nil {
-        return fmt.Errorf("failed to checkout branch: %w", err)
-    }
+	if err := w.Checkout(opts); err != nil {
+		return fmt.Errorf("failed to checkout branch: %w", err)
+	}
 
-    return nil
+	return nil
+}
+
+type GridTree struct {
+	grid TileGrid
+	prev *GridTree
+	next *GridTree
 }
 
 func gitSetup(g *Game) bool {
@@ -95,7 +101,7 @@ func gitSetup(g *Game) bool {
 	// Commit initial game state to current branch
 	worktree, err := g.repo.Worktree()
 	if err != nil {
-        fmt.Printf("Error opening worktree: %v\n", err)
+		fmt.Printf("Error opening worktree: %v\n", err)
 		return false
 	}
 	worktree.Add(gridFileName)
@@ -103,4 +109,19 @@ func gitSetup(g *Game) bool {
 	fmt.Printf("Initialized git repo and state file \"%s\"\n", gridFileName)
 
 	return true
+}
+
+func iterCommits(repo *git.Repository) {
+	commits, err := repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
+	if err != nil {
+		fmt.Print("Error getting log iterator: ", err, "\n")
+		return
+	}
+
+	fmt.Print("Got commit log!\n")
+	commit, err := commits.Next()
+	for err == nil {
+		fmt.Print(commit)
+		commit, err = commits.Next()
+	}
 }
