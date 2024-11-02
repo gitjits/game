@@ -2,6 +2,7 @@ package main
 
 import (
 	//"fmt"
+	"fmt"
 	"image/color"
 	"math"
 
@@ -27,6 +28,22 @@ type TileGrid struct {
 	BoundsX int
 	BoundsY int
 	Color   color.RGBA
+}
+
+func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
+    tree := startTree
+    offsetX := 0
+    for tree.next != nil {
+        if tree.branch != nil {
+            //drawGridTree(tree, screen, offsetY + 60)
+        }
+	//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+        drawGrid(tree.grid, screen)
+        fmt.Println("Drawing", tree.grid)
+        tree = tree.next
+        offsetX += 60
+        break
+    }
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {

@@ -20,6 +20,7 @@ const (
 
 type Game struct {
 	grid TileGrid
+    gridTree GridTree
 
 	// Backing git repo to track grid changes
 	backingFS billy.Filesystem
@@ -37,6 +38,8 @@ func (g *Game) init() {
 
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitSetup(g)
+    g.gridTree = iterCommits(g)
+
 	fmt.Print("Setup Git repo!\n")
 }
 
@@ -46,13 +49,13 @@ func (g *Game) Update() error {
 	}
 
 	g.grid.Update()
-	iterCommits(g)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGrid(g.grid, screen)
+    //drawGridTree(&g.gridTree, screen, 0)
+	//drawGrid(g.grid, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy

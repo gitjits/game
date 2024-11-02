@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
@@ -179,16 +180,20 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Helper function to create a commit
-	createCommit := func(message string) (plumbing.Hash, error) {
+	createCommit := func(message string, c color.RGBA) (plumbing.Hash, error) {
+        grid := createGrid(4, 4, 4, 4, 4, 4, c)
 		file, err := w.Filesystem.Create(gridFileName)
 		if err != nil {
 			return plumbing.ZeroHash, err
 		}
-		_, err = file.Write([]byte(message))
-		if err != nil {
-			return plumbing.ZeroHash, err
-		}
-		file.Close()
+        bytes, err := bson.Marshal(grid)
+        if err != nil {
+            fmt.Printf("Serialization error: %v\n", err)
+            return plumbing.ZeroHash, err
+        }
+
+        file.Write(bytes)
+        file.Close()
 
 		_, err = w.Add(gridFileName)
 		if err != nil {
@@ -200,7 +205,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create initial commit on main
-	_, err = createCommit("Initial commit on main")
+    _, err = createCommit("Initial commit on main", color.RGBA{R: 255, B: 255, G: 255})
 	fmt.Print("Created a commit\n")
 	if err != nil {
 		return err
@@ -216,11 +221,11 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commits to feature1
-	_, err = createCommit("First commit on feature1")
+	_, err = createCommit("First commit on feature1", color.RGBA{R: 255, B: 0, G: 0})
 	if err != nil {
 		return err
 	}
-	_, err = createCommit("Second commit on feature1")
+	_, err = createCommit("Second commit on feature1", color.RGBA{R: 0, B: 0, G: 255})
 	if err != nil {
 		return err
 	}
@@ -231,7 +236,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add more commits to main
-	_, err = createCommit("Second commit on main")
+	_, err = createCommit("Second commit on main", color.RGBA{R: 0, B: 255, G: 255})
 	if err != nil {
 		return err
 	}
@@ -246,7 +251,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commit to feature2
-	_, err = createCommit("First commit on feature2")
+	_, err = createCommit("First commit on feature2", color.RGBA{R: 255, B: 0, G: 255})
 	if err != nil {
 		return err
 	}
@@ -255,7 +260,7 @@ func createTestData(repo *git.Repository) error {
 	if err := CheckoutBranch(repo, "master"); err != nil {
 		return err
 	}
-	_, err = createCommit("Third commit on main")
+	_, err = createCommit("Third commit on main", color.RGBA{R: 255, B: 255, G: 0})
 	if err != nil {
 		return err
 	}
