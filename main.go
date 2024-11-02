@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+    _ "embed"
 	"log"
 	"math"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 )
 
 const (
@@ -38,9 +38,12 @@ var (
 	ebitenImage *ebiten.Image
 )
 
+//go:embed tile.png
+var TileIMG []byte
+
 func init() {
 	// Decode an image from the image file's byte slice.
-	img, _, err := image.Decode(bytes.NewReader(images.Ebiten_png))
+	img, _, err := image.Decode(bytes.NewReader(TileIMG))
 	if err != nil {
 		log.Fatal(err)
 	}
