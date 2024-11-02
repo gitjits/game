@@ -22,7 +22,7 @@ func genVertices(num int, centerX float32, centerY float32, r float64, hc color.
 			ColorR: float32(hc.R),
 			ColorG: float32(hc.G),
 			ColorB: float32(hc.B),
-			ColorA: 1,
+			ColorA: float32(hc.A),
 		})
 	}
 

@@ -26,6 +26,7 @@ type TileGrid struct {
     sizeY int
     boundsX int
     boundsY int
+    color  color.RGBA
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
@@ -37,7 +38,7 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 	}
 }
 
-func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int) TileGrid {
+func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int, defaultColor color.RGBA) TileGrid {
     grid := TileGrid{
         x: x,
         y: y,
@@ -45,6 +46,7 @@ func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int) Ti
         sizeY: sizeY,
         boundsX: boundsX,
         boundsY: boundsY,
+        color: defaultColor,
     }
 	grid.tiles = make([][]*Tile, grid.sizeX)
 	for i := range grid.tiles {
@@ -54,7 +56,7 @@ func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int) Ti
 	for j := 0; j < grid.sizeY; j++ {
 		for i := 0; i < grid.sizeX; i++ {
             grid.tiles[j][i] = &Tile{
-                color: color.RGBA{R: 255, B: 255, G: 255, A: 1},
+                color: defaultColor,
             }
         }
     }

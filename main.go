@@ -57,7 +57,7 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
-    g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2)
+    g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 }
 
 func (g *Game) Update() error {
