@@ -107,11 +107,13 @@ func gitSetup(g *Game) bool {
 	}
 	worktree.Add(gridFileName)
 	worktree.Commit("Initial commit", &git.CommitOptions{})
-    err = createTestData(g.repo)
-    if err != nil {
+	worktree.Commit("commit 2", &git.CommitOptions{})
+	worktree.Commit("commit 3", &git.CommitOptions{})
+	err = createTestData(g.repo)
+	if err != nil {
 		fmt.Printf("Error creating test data: %v\n", err)
 		return false
-    }
+	}
 	fmt.Printf("Initialized git repo and state file \"%s\"\n", gridFileName)
 
 	return true
@@ -143,18 +145,25 @@ func iterCommits(g *Game) GridTree {
 		return output
 	}
 
-	fmt.Print("Got commit log!\n")
+	worktree, err := g.repo.Worktree()
+	if err != nil {
+		fmt.Print("Error getting current worktree!", err, "\n")
+		return output
+	}
+
 	commit, err := commits.Next()
+	if err != nil {
+		fmt.Print("Error first commit: ", err, "\n")
+		return output
+	}
+
+	// We need to know the initial HEAD to make sure we reset state before returning
+	initialHash := commit.Hash
+
 	for err == nil {
 		fmt.Print(commit)
 		commit, err = commits.Next()
 		if err != nil {
-			continue
-		}
-
-		worktree, wtErr := g.repo.Worktree()
-		if wtErr != nil {
-			fmt.Print("Error getting current worktree!", wtErr, "\n")
 			continue
 		}
 
@@ -173,93 +182,96 @@ func iterCommits(g *Game) GridTree {
 		output = newNode
 	}
 
+	// Revert back to the original HEAD
+	worktree.Checkout(&git.CheckoutOptions{Hash: initialHash})
 	return output
 }
 
 func createTestData(repo *git.Repository) error {
-    w, err := repo.Worktree()
-    if err != nil {
-        return fmt.Errorf("failed to get worktree: %w", err)
-    }
+	w, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
 
-    // Helper function to create a commit
-    createCommit := func(message string) (plumbing.Hash, error) {
-        file, err := w.Filesystem.Create(gridFileName)
-        if err != nil {
-            return plumbing.ZeroHash, err
-        }
-        _, err = file.Write([]byte(message))
-        if err != nil {
-            return plumbing.ZeroHash, err
-        }
-        file.Close()
+	// Helper function to create a commit
+	createCommit := func(message string) (plumbing.Hash, error) {
+		file, err := w.Filesystem.Create(gridFileName)
+		if err != nil {
+			return plumbing.ZeroHash, err
+		}
+		_, err = file.Write([]byte(message))
+		if err != nil {
+			return plumbing.ZeroHash, err
+		}
+		file.Close()
 
-        _, err = w.Add(gridFileName)
-        if err != nil {
-            return plumbing.ZeroHash, err
-        }
+		_, err = w.Add(gridFileName)
+		if err != nil {
+			return plumbing.ZeroHash, err
+		}
 
-        hash, err := w.Commit(message, &git.CommitOptions{})
-        return hash, err
-    }
+		hash, err := w.Commit(message, &git.CommitOptions{})
+		return hash, err
+	}
 
-    // Create initial commit on main
-    _, err = createCommit("Initial commit on main")
-    if err != nil {
-        return err
-    }
+	// Create initial commit on main
+	_, err = createCommit("Initial commit on main")
+	fmt.Print("Created a commit\n")
+	if err != nil {
+		return err
+	}
 
-    // Create feature1 branch from initial commit
-    if err := CreateBranch(repo, "feature1"); err != nil {
-        return err
-    }
-    if err := CheckoutBranch(repo, "feature1"); err != nil {
-        return err
-    }
+	// Create feature1 branch from initial commit
+	if err := CreateBranch(repo, "feature1"); err != nil {
+		return err
+	}
+	if err := CheckoutBranch(repo, "feature1"); err != nil {
+		return err
+	}
 
-    // Add commits to feature1
-    _, err = createCommit("First commit on feature1")
-    if err != nil {
-        return err
-    }
-    _, err = createCommit("Second commit on feature1")
-    if err != nil {
-        return err
-    }
+	// Add commits to feature1
+	_, err = createCommit("First commit on feature1")
+	if err != nil {
+		return err
+	}
+	_, err = createCommit("Second commit on feature1")
+	if err != nil {
+		return err
+	}
 
-    // Back to main
-    if err := CheckoutBranch(repo, "master"); err != nil {
-        return err
-    }
+	// Back to main
+	if err := CheckoutBranch(repo, "master"); err != nil {
+		return err
+	}
 
-    // Add more commits to main
-    _, err = createCommit("Second commit on main")
-    if err != nil {
-        return err
-    }
+	// Add more commits to main
+	_, err = createCommit("Second commit on main")
+	if err != nil {
+		return err
+	}
 
-    // Create feature2 from current main
-    if err := CreateBranch(repo, "feature2"); err != nil {
-        return err
-    }
-    if err := CheckoutBranch(repo, "feature2"); err != nil {
-        return err
-    }
+	// Create feature2 from current main
+	if err := CreateBranch(repo, "feature2"); err != nil {
+		return err
+	}
+	if err := CheckoutBranch(repo, "feature2"); err != nil {
+		return err
+	}
 
-    // Add commit to feature2
-    _, err = createCommit("First commit on feature2")
-    if err != nil {
-        return err
-    }
+	// Add commit to feature2
+	_, err = createCommit("First commit on feature2")
+	if err != nil {
+		return err
+	}
 
-    // Back to main for final commit
-    if err := CheckoutBranch(repo, "master"); err != nil {
-        return err
-    }
-    _, err = createCommit("Third commit on main")
-    if err != nil {
-        return err
-    }
+	// Back to main for final commit
+	if err := CheckoutBranch(repo, "master"); err != nil {
+		return err
+	}
+	_, err = createCommit("Third commit on main")
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
