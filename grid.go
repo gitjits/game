@@ -9,57 +9,57 @@ import (
 )
 
 type Tile struct {
-	width    int
-	height   int
-	x        int
-	y        int
-	selected bool
-	color    color.RGBA
-	radius   int
+	Width    int
+	Height   int
+	X        int
+	Y        int
+	Selected bool
+	Color    color.RGBA
+	Radius   int
 }
 
 type TileGrid struct {
-	tiles   [][]*Tile
-	x       int
-	y       int
-	sizeX   int
-	sizeY   int
-	boundsX int
-	boundsY int
-	color   color.RGBA
+	Tiles   [][]*Tile
+	X       int
+	Y       int
+	SizeX   int
+	SizeY   int
+	BoundsX int
+	BoundsY int
+	Color   color.RGBA
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
-	for j := 0; j < len(grid.tiles); j++ {
-		for i := 0; i < len(grid.tiles[j]); i++ {
-			tile := grid.tiles[j][i]
-			if !tile.selected {
-				drawPolygon(6, tile.x+grid.x, tile.y+grid.y, tile.radius, tile.color, screen)
+	for j := 0; j < len(grid.Tiles); j++ {
+		for i := 0; i < len(grid.Tiles[j]); i++ {
+			tile := grid.Tiles[j][i]
+			if !tile.Selected {
+				drawPolygon(6, tile.X+grid.X, tile.Y+grid.Y, tile.Radius, tile.Color, screen)
 			}
 		}
 	}
 }
 
-func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int, defaultColor color.RGBA) TileGrid {
+func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, defaultColor color.RGBA) TileGrid {
 	grid := TileGrid{
-		x:       x,
-		y:       y,
-		sizeX:   sizeX,
-		sizeY:   sizeY,
-		boundsX: boundsX,
-		boundsY: boundsY,
-		color:   defaultColor,
+		X:       X,
+		Y:       Y,
+		SizeX:   SizeX,
+		SizeY:   SizeY,
+		BoundsX: BoundsX,
+		BoundsY: BoundsY,
+		Color:   defaultColor,
 	}
-	grid.tiles = make([][]*Tile, grid.sizeX)
-	for i := range grid.tiles {
-		grid.tiles[i] = make([]*Tile, grid.sizeY)
+	grid.Tiles = make([][]*Tile, grid.SizeX)
+	for i := range grid.Tiles {
+		grid.Tiles[i] = make([]*Tile, grid.SizeY)
 	}
 
-	for j := 0; j < grid.sizeY; j++ {
-		for i := 0; i < grid.sizeX; i++ {
-			grid.tiles[j][i] = &Tile{
-				color:    defaultColor,
-				selected: false,
+	for j := 0; j < grid.SizeY; j++ {
+		for i := 0; i < grid.SizeX; i++ {
+			grid.Tiles[j][i] = &Tile{
+				Color:    defaultColor,
+				Selected: false,
 			}
 		}
 	}
@@ -69,28 +69,28 @@ func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int, de
 }
 
 func (grid *TileGrid) Update() {
-	for j := 0; j < grid.sizeY; j++ {
-		for i := 0; i < grid.sizeX; i++ {
-			r := grid.boundsX / grid.sizeX / 2
+	for j := 0; j < grid.SizeY; j++ {
+		for i := 0; i < grid.SizeX; i++ {
+			r := grid.BoundsX / grid.SizeX / 2
 			w, h := r*2, r*2
 			ymult := 1.0
 			if i%2 != 0 {
 				ymult = 2
 			}
-			x, y := w*i+r, h*j+int(math.Floor(float64(r)*ymult))
-			grid.tiles[j][i].width = w
-			grid.tiles[j][i].height = h
-			grid.tiles[j][i].x = x
-			grid.tiles[j][i].y = y
-			grid.tiles[j][i].radius = r
+			X, Y := w*i+r, h*j+int(math.Floor(float64(r)*ymult))
+			grid.Tiles[j][i].Width = w
+			grid.Tiles[j][i].Height = h
+			grid.Tiles[j][i].X = X
+			grid.Tiles[j][i].Y = Y
+			grid.Tiles[j][i].Radius = r
 			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 				mx, my := ebiten.CursorPosition()
-				if mx <= x+r && mx >= x-r && my <= y+r && my >= y-r {
-					grid.tiles[j][i].selected = true
+				if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+					grid.Tiles[j][i].Selected = true
 				}
 			}
 
-			//fmt.Println(grid.tiles[j][i])
+			//fmt.Println(grid.Tiles[j][i])
 		}
 	}
 }
