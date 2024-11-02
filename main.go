@@ -1,11 +1,6 @@
 package main
 
 import (
-	"bytes"
-	//"math"
-
-	_ "embed"
-	"image"
 	"image/color"
 	_ "image/png"
 	"log"
@@ -18,31 +13,7 @@ import (
 const (
 	screenWidth  = 500
 	screenHeight = 500
-	maxAngle     = 256
-	gridRadius   = 25
 )
-
-var (
-	ebitenImage *ebiten.Image
-)
-
-//go:embed hex.png
-var TileIMG []byte
-
-func init() {
-	// Decode an image from the image file's byte slice.
-	img, _, err := image.Decode(bytes.NewReader(TileIMG))
-	if err != nil {
-		log.Fatal(err)
-	}
-	origEbitenImage := ebiten.NewImageFromImage(img)
-	ebitenImage = ebiten.NewImage(64, 64)
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(0.25, 0.25)
-	op.ColorScale.ScaleAlpha(0.5)
-	ebitenImage.DrawImage(origEbitenImage, op)
-}
 
 type Game struct {
 	grid TileGrid
