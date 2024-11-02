@@ -3,6 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"math"
+
+	//"math"
+
 	//"fmt"
 	_ "embed"
 	"image"
@@ -21,13 +25,14 @@ const (
 	screenWidth  = 500
 	screenHeight = 500
 	maxAngle     = 256
+    gridRadius = 25
 )
 
 var (
 	ebitenImage *ebiten.Image
 )
 
-//go:embed tile.png
+//go:embed hex.png
 var TileIMG []byte
 
 func init() {
@@ -37,19 +42,19 @@ func init() {
 		log.Fatal(err)
 	}
 	origEbitenImage := ebiten.NewImageFromImage(img)
-	ebitenImage = ebiten.NewImage(50, 50)
+	ebitenImage = ebiten.NewImage(64, 64)
 
 	op := &ebiten.DrawImageOptions{}
-    op.GeoM.Scale(0.0625, 0.0625)
+    op.GeoM.Scale(0.25, 0.25)
 	op.ColorScale.ScaleAlpha(0.5)
 	ebitenImage.DrawImage(origEbitenImage, op)
 }
 
 type Tile struct {
-	width   int
-	height  int
-	x           int
-	y           int
+	width int
+	height int
+	x int
+	y int
     lx int
     ly int
 }
@@ -83,8 +88,12 @@ func (g *Game) init() {
     }
     for j := 0; j < g.grid.y; j++ {
         for i := 0; i < g.grid.x; i++ {
-            w, h := ebitenImage.Bounds().Dx(), ebitenImage.Bounds().Dy()
-            x, y := w * i, h * j
+            w, h := gridRadius * 2 - 10, gridRadius * 2 - 3
+            ymult := 1.0
+            if i % 2 != 0 {
+                ymult = 2
+            }
+            x, y := w * i + gridRadius, h * j + int(math.Floor(gridRadius*ymult))
             g.grid.tiles[j][i] = &Tile{
                 width:  w,
                 height: h,
@@ -119,9 +128,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for j := 0; j < len(g.grid.tiles); j++ {
         for i := 0; i < len(g.grid.tiles[j]); i++ {
             s := g.grid.tiles[j][i]
-            g.op.GeoM.Reset()
-            g.op.GeoM.Translate(float64(s.x), float64(s.y))
-            screen.DrawImage(ebitenImage, &g.op)
+            //g.op.GeoM.Reset()
+            //g.op.GeoM.Rotate(math.Pi/4)
+            //g.op.GeoM.Translate(float64(s.x), float64(s.y))
+            //screen.DrawImage(ebitenImage, &g.op)
+            drawPolygon(6, s.x, s.y, gridRadius, color.RGBA{R: 255, B: 255, G: 255}, screen)
         }
 	}
 }
