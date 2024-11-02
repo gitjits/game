@@ -29,8 +29,8 @@ import (
 )
 
 const (
-	screenWidth  = 320
-	screenHeight = 240
+	screenWidth  = 500
+	screenHeight = 500
 	maxAngle     = 256
 )
 
