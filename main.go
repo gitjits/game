@@ -33,6 +33,7 @@ func (g *Game) init() {
 	}()
 
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+	gitSetup(g)
 }
 
 func (g *Game) Update() error {
@@ -41,7 +42,6 @@ func (g *Game) Update() error {
 	}
 
 	g.grid.Update()
-	gitSetup(g)
 	return nil
 }
 

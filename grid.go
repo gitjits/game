@@ -2,7 +2,6 @@ package main
 
 import (
 	//"fmt"
-	"fmt"
 	"image/color"
 	"math"
 
@@ -14,6 +13,7 @@ type Tile struct {
 	height int
 	x      int
 	y      int
+    selected bool
     color  color.RGBA
     radius int
 }
@@ -33,7 +33,9 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 	for j := 0; j < len(grid.tiles); j++ {
 		for i := 0; i < len(grid.tiles[j]); i++ {
 			tile := grid.tiles[j][i]
-			drawPolygon(6, tile.x+grid.x, tile.y+grid.y, tile.radius, tile.color, screen)
+            if !tile.selected {
+                drawPolygon(6, tile.x+grid.x, tile.y+grid.y, tile.radius, tile.color, screen)
+            }
 		}
 	}
 }
@@ -57,6 +59,7 @@ func createGrid(x int, y int, sizeX int, sizeY int, boundsX int, boundsY int, de
 		for i := 0; i < grid.sizeX; i++ {
             grid.tiles[j][i] = &Tile{
                 color: defaultColor,
+                selected: false,
             }
         }
     }
@@ -80,7 +83,14 @@ func (grid *TileGrid) Update() {
             grid.tiles[j][i].x = x
             grid.tiles[j][i].y = y
             grid.tiles[j][i].radius = r
-            fmt.Println(grid.tiles[j][i])
+            if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+                mx, my := ebiten.CursorPosition()
+                if mx <= x + r && mx >= x - r && my <= y + r && my >= y - r {
+                    grid.tiles[j][i].selected = true
+                }
+            }
+
+            //fmt.Println(grid.tiles[j][i])
 		}
 	}
 }
