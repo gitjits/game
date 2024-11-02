@@ -6,7 +6,6 @@ import (
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	memory "github.com/go-git/go-git/v5/storage/memory"
 	bson "gopkg.in/mgo.v2/bson"
@@ -31,6 +30,19 @@ func ListBranches(r *git.Repository) ([]string, error) {
 	})
 
 	return branches, nil
+}
+
+func CreateBranch(r *git.Repository, branchName string) error {
+	headRef, err := r.Head()
+	if err != nil {
+		return fmt.Errorf("failed to get HEAD: %w", err)
+	}
+	ref := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branchName), headRef.Hash())
+	err = r.Storer.SetReference(ref)
+	if err != nil {
+		return fmt.Errorf("failed to create branch: %w", err)
+	}
+	return nil
 }
 
 func CheckoutBranch(r *git.Repository, branchName string) error {
@@ -212,7 +224,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create feature1 branch from initial commit
-	err = repo.CreateBranch(&config.Branch{Name: "feature1"})
+	err = CreateBranch(repo, "feature1")
 	if err != nil {
 		return err
 	}
@@ -242,7 +254,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create feature2 from current main
-	err = repo.CreateBranch(&config.Branch{Name: "feature2"})
+	err = CreateBranch(repo, "feature2")
 	if err != nil {
 		return err
 	}
