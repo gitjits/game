@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	//"math"
 
 	_ "embed"
-	"image"
 	"image/color"
 	_ "image/png"
 	"log"
@@ -49,7 +46,7 @@ func (g *Game) Update() error {
 	}
 
 	g.grid.Update()
-	iterCommits(g.repo)
+	iterCommits(g)
 	return nil
 }
 

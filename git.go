@@ -66,9 +66,10 @@ func CheckoutBranch(r *git.Repository, branchName string) error {
 }
 
 type GridTree struct {
-	grid TileGrid
-	prev *GridTree
-	next *GridTree
+	grid   TileGrid
+	parent *GridTree
+	next   *GridTree
+	branch *GridTree
 }
 
 func gitSetup(g *Game) bool {
@@ -111,11 +112,30 @@ func gitSetup(g *Game) bool {
 	return true
 }
 
-func iterCommits(repo *git.Repository) {
-	commits, err := repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
+func gitCurrentGrid(g *Game) (TileGrid, error) {
+	var grid TileGrid
+
+	file, err := g.backingFS.Open(gridFileName)
+	if err != nil {
+		return grid, err
+	}
+
+	var data []byte
+	bytes_read, err := file.Read(data)
+	_ = bytes_read
+
+	err = bson.Unmarshal(data, grid)
+
+	return grid, err
+}
+
+func iterCommits(g *Game) GridTree {
+	var output GridTree
+
+	commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
 	if err != nil {
 		fmt.Print("Error getting log iterator: ", err, "\n")
-		return
+		return output
 	}
 
 	fmt.Print("Got commit log!\n")
@@ -123,5 +143,30 @@ func iterCommits(repo *git.Repository) {
 	for err == nil {
 		fmt.Print(commit)
 		commit, err = commits.Next()
+		if err != nil {
+			continue
+		}
+
+		worktree, wtErr := g.repo.Worktree()
+		if wtErr != nil {
+			fmt.Print("Error getting current worktree!", wtErr, "\n")
+			continue
+		}
+
+		// Revert to this specific commit
+		worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
+
+		// Read grid data at this commit and update tree
+		var newNode GridTree
+		newNode.next = &output
+		output.parent = &newNode
+		grid, err := gitCurrentGrid(g)
+		_ = err
+		newNode.grid = grid
+
+		// Update root node
+		output = newNode
 	}
+
+	return output
 }
