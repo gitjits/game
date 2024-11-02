@@ -4,24 +4,22 @@ import (
 	"bytes"
 	//"math"
 
-	//"fmt"
 	_ "embed"
 	"image"
 	"image/color"
 	_ "image/png"
 	"log"
 
-	//"math"
-	//"math/rand/v2"
-
+	billy "github.com/go-git/go-billy/v5"
+	git "github.com/go-git/go-git/v5"
 	"github.com/hajimehoshi/ebiten/v2"
-	//"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 const (
 	screenWidth  = 500
 	screenHeight = 500
 	maxAngle     = 256
+	gridRadius   = 25
 )
 
 var (
@@ -47,9 +45,15 @@ func init() {
 }
 
 type Game struct {
-	grid     TileGrid
-	op       ebiten.DrawImageOptions
-	inited   bool
+	grid TileGrid
+
+	// Backing git repo to track grid changes
+	backingFS billy.Filesystem
+	repo      *git.Repository
+
+	// Meta stuff
+	op     ebiten.DrawImageOptions
+	inited bool
 }
 
 func (g *Game) init() {
@@ -57,7 +61,7 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
-    g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 }
 
 func (g *Game) Update() error {
@@ -65,13 +69,14 @@ func (g *Game) Update() error {
 		g.init()
 	}
 
-    g.grid.Update()
+	g.grid.Update()
+	gitSetup(g)
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-    drawGrid(g.grid, screen)
+	drawGrid(g.grid, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy
