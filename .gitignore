@@ -1,1 +1,4 @@
 game
+*.exe
+*.dll
+*.lib
