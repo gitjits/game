@@ -30,8 +30,13 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	}
 	g.gridTree = node
 	old.next = &g.gridTree
-    g.autoScroll = true
+	g.autoScroll = true
+	g.selected = &grid
+	g.selected.IsSelectedGrid = true
 
+	g.logger.AddMessage("you$ ", "git commit -m 'move a piece'", true)
+	g.logger.AddMessage("", "[main d34db33f] move a piece", true)
+	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
 	return "blah"
 }
 
