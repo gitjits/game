@@ -87,9 +87,8 @@ func nukeCurrentBranch(g *Game) {
 	if g.gridTree.grid.SizeX == 0 || g.gridTree.prev == nil || g.gridTree.prev.grid.SizeX == 0 || g.gridTree.prev.prev == nil || g.gridTree.prev.prev.grid.SizeX == 0 {
         g.logger.AddMessage("[!] ", "Can't revert", false)
 		return
-	} else {
-        g.logger.AddMessage("[!] ", "Reverting", false)
-    }
+	}
+    g.logger.AddMessage("you$ ", "git reset --hard " + g.gridTree.prev.commitHash, false)
 
     //node := g.gridTree.prev
 	//g.gridTree = *node

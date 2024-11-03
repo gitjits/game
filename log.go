@@ -95,7 +95,7 @@ func (l *LogWindow) Draw(screen *ebiten.Image) {
                 ch += 1
             }
             cum += char
-            if ch*4 > l.status && !msg.Done {
+            if ch > l.status && !msg.Done {
                 break
             }
             text.Draw(screen, cum, l.font, int(sx)+15, int(yPos)+15, col)

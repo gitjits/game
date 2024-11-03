@@ -77,6 +77,23 @@ func (grid *TileGrid) addSelection(coord vec2i) {
 	}
 }
 
+func (grid *TileGrid) Equals(ng TileGrid) bool {
+    if len(ng.Tiles) != len(grid.Tiles) {
+        return false
+    }
+	for j := 0; j < len(grid.Tiles); j++ {
+		for i := 0; i < len(grid.Tiles[j]); i++ {
+			if grid.Tiles[j][i].occupant != ng.Tiles[j][i].occupant {
+                return false
+            }
+			if grid.Tiles[j][i].Color != ng.Tiles[j][i].Color {
+                return false
+            }
+		}
+	}
+	return true
+}
+
 func (grid *TileGrid) posSelected(coord vec2i) bool {
 	cells := grid.selectedCells
 	if cells[0].valid && cells[0].x == coord.x && cells[0].y == coord.y {
@@ -133,7 +150,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
-	if g.selected != nil {
+	if g.selected != nil && !g.hidden {
 		g.selected.X = screenWidth/2 - 150
 		g.selected.Y = screenHeight/2 - 150
 		g.selected.BoundsX = 310
@@ -283,12 +300,7 @@ func (grid *TileGrid) Clone() TileGrid {
 }
 
 func (grid *TileGrid) Update(g *Game) {
-	if grid.IsSelectedGrid {
-		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-			grid.IsSelectedGrid = false
-			g.selected = nil
-			fmt.Println("KILLED")
-		}
+	if grid.IsSelectedGrid && !g.hidden {
         mx, my := ebiten.CursorPosition()
         for j := 0; j < grid.SizeY; j++ {
             for i := 0; i < grid.SizeX; i++ {
