@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
@@ -27,37 +28,57 @@ type TileGrid struct {
     IsSelectedGrid bool
 }
 
-func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
-	tree := startTree
-	offsetX := 50
-	for tree != nil {
-		if tree.branch != nil {
-			//drawGridTree(tree, screen, offsetY + 60)
-		}
-        if tree.grid.SizeX == 0 {
-            fmt.Println("GRID IS NIL", tree.grid)
-            return
-        }
-        if !tree.grid.IsSelectedGrid {
-            tree.grid.X = offsetX
-            tree.grid.Y = offsetY
-            tree.grid.BoundsX = 50
-            tree.grid.BoundsY = 50
-        } else {
-            tree.grid.X = screenWidth/4
-            tree.grid.Y = screenHeight/4
-            tree.grid.BoundsX = screenWidth/2
-            tree.grid.BoundsY = screenHeight/2
-            faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
-            faux.Tiles = tree.grid.Tiles
-            drawGrid(faux, screen)
-        }
-		tree.grid.Update()
-		drawGrid(tree.grid, screen)
-		//fmt.Println(tree.grid)
-		tree = tree.next
-		offsetX += 60
-	}
+func drawGridTree(tree *GridTree, screen *ebiten.Image, offsetY, offsetX int, visited map[string]bool) {
+    if tree == nil || visited[tree.commitHash] {
+        return
+    }
+
+    visited[tree.commitHash] = true
+
+    // Draw current node
+    if tree.grid.SizeX == 0 {
+        fmt.Println("GRID IS NIL", tree.grid)
+        return
+    }
+
+    // Handle selected grid
+    if tree.grid.IsSelectedGrid {
+        // Draw main selected grid in center
+        tree.grid.X = screenWidth/4
+        tree.grid.Y = screenHeight/4
+        tree.grid.BoundsX = screenWidth/2
+        tree.grid.BoundsY = screenHeight/2
+        ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
+
+        // Draw small version in tree
+        faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
+        faux.Tiles = tree.grid.Tiles
+        drawGrid(faux, screen)
+    } else {
+        tree.grid.X = offsetX
+        tree.grid.Y = offsetY
+        tree.grid.BoundsX = 50
+        tree.grid.BoundsY = 50
+    }
+
+    tree.grid.Update()
+    drawGrid(tree.grid, screen)
+
+    // Recursively draw branches
+    if tree.branch != nil {
+        drawGridTree(tree.branch, screen, offsetY+60, offsetX+60, visited)
+    }
+
+    // Continue main branch
+    if tree.next != nil {
+        drawGridTree(tree.next, screen, offsetY, offsetX+60, visited)
+    }
+}
+
+// Call it like this:
+func drawGridTreeStart(startTree *GridTree, screen *ebiten.Image) {
+    visited := make(map[string]bool)
+    drawGridTree(startTree, screen, 60, 60, visited)
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {

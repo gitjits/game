@@ -7,8 +7,8 @@ import (
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
+	//"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	memory "github.com/go-git/go-git/v5/storage/memory"
 	bson "gopkg.in/mgo.v2/bson"
 )
@@ -71,6 +71,29 @@ type GridTree struct {
 	parent *GridTree
 	next   *GridTree
 	branch *GridTree
+    commitHash string
+}
+
+func PrintGridTree(root *GridTree, indent string) {
+    if root == nil {
+        return
+    }
+
+    // Print current node
+    fmt.Printf("%sCommit: %s\n", indent, root.commitHash[:8])
+
+    // Print relationships
+    if root.parent != nil {
+        fmt.Printf("%s├── Parent: %s\n", indent, root.parent.commitHash[:8])
+    }
+    if root.next != nil {
+        fmt.Printf("%s├── Next: %s\n", indent, root.next.commitHash[:8])
+        PrintGridTree(root.next, indent+"│   ")
+    }
+    if root.branch != nil {
+        fmt.Printf("%s└── Branch: %s\n", indent, root.branch.commitHash[:8])
+        PrintGridTree(root.branch, indent+"    ")
+    }
 }
 
 func gitCommitGrid(g *Game, grid *TileGrid, message string) error {
@@ -138,50 +161,18 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 }
 
 func buildCommitTree(g *Game) (*GridTree, error) {
-	var head *GridTree // Keep track of the head of our list
-
-	worktree, err := g.repo.Worktree()
-	worktree.Checkout(&git.CheckoutOptions{})
-	if err != nil {
-		fmt.Print("Error getting current worktree!", err, "\n")
-		return &GridTree{}, err
-	}
-
-	branches, err := ListBranches(g.repo)
-	if err != nil {
-		return head, err
-	}
-	for _, branch := range branches {
-		commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime, From: branch})
-		if err != nil {
-			fmt.Print("Error getting log iterator: ", err, "\n")
-			return &GridTree{}, err
-		}
-
-		commits.ForEach(func(commit *object.Commit) error {
-			worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
-
-			newNode := &GridTree{}
-
-			grid, err := gitCurrentGrid(g)
-			if err != nil {
-				fmt.Println("Error on commit2", err)
-				return err
-			}
-			newNode.grid = grid
-
-			// Link the new node properly
-			if head != nil {
-				newNode.next = head
-				head.parent = newNode
-			}
-			head = newNode
-
-			return nil
-		})
-	}
-
-	return head, err
+    return nil, nil
+}
+// Helper function to check if a node already has a parent in its chain
+func containsParent(node *GridTree, parent *GridTree) bool {
+    current := node
+    for current != nil {
+        if current.parent == parent {
+            return true
+        }
+        current = current.parent
+    }
+    return false
 }
 
 func commitTestData(g *Game) error {
@@ -215,7 +206,8 @@ func commitTestData(g *Game) error {
 	}
 
 	// Create initial commit on main
-	_, err = createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
+    hash, err := createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
+	fmt.Println("Created a commit on master", hash)
 	if err != nil {
 		return err
 	}
@@ -230,22 +222,13 @@ func commitTestData(g *Game) error {
 	}
 
 	// Add commits to feature1
-	_, err = createCommit("first com mit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}))
+	hash, err = createCommit("first com mit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}))
+	fmt.Println("Created a commit on feature1", hash)
 	if err != nil {
 		return err
 	}
-	_, err = createCommit("Second commit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}))
-	if err != nil {
-		return err
-	}
-
-	// Back to main
-	if err := CheckoutBranch(g, "master"); err != nil {
-		return err
-	}
-
-	// Add more commits to main
-	_, err = createCommit("Second commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 255, G: 255, A: 1}))
+	hash, err = createCommit("Second commit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}))
+	fmt.Println("Created a commit on feature1", hash)
 	if err != nil {
 		return err
 	}
@@ -260,16 +243,8 @@ func commitTestData(g *Game) error {
 	}
 
 	// Add commit to feature2
-	_, err = createCommit("First commit on feature2", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}))
-	if err != nil {
-		return err
-	}
-
-	// Back to main for final commit
-	if err := CheckoutBranch(g, "master"); err != nil {
-		return err
-	}
-	_, err = createCommit("Third commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 255, G: 0, A: 1}))
+	hash, err = createCommit("First commit on feature2", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}))
+	fmt.Println("Created a commit on feature2", hash)
 	if err != nil {
 		return err
 	}
