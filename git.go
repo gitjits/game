@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+    "math/rand"
 	"image/color"
 )
 
@@ -14,6 +15,12 @@ type GridTree struct {
 	commitHash string
 }
 
+func generateRandomHash() string {
+    b := make([]byte, 20)
+    rand.Read(b)
+    return fmt.Sprintf("%x", b)
+}
+
 func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	old := g.gridTree
 	if old.prev != nil {
@@ -24,6 +31,7 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 		prev:       &old,
 		next:       nil,
 		generation: old.generation,
+        commitHash: generateRandomHash(),
 	}
     if branch && node.generation == 4 {
         g.logger.AddMessage("[!] ", "Maximum allowed branches", false)
@@ -31,6 +39,7 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
     }
 	if branch {
 		node.generation++
+        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout -b branch%d", node.generation), true)
 	}
 	g.gridTree = node
 	old.next = &g.gridTree
@@ -39,13 +48,23 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	g.selected.IsSelectedGrid = true
 
 	g.logger.AddMessage("you$ ", "git commit -m 'move a piece'", true)
-	g.logger.AddMessage("", "[main d34db33f] move a piece", true)
+    g.logger.AddMessage("", fmt.Sprintf("[main %s] move a piece", node.commitHash[0:8]), true)
 	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
-	return "blah"
+	return  node.commitHash
 }
 
 func mergeCurrentBranch(g *Game) {
     fmt.Println("merge", g.gridTree.generation)
+    if g.gridTree.generation - 1 > 0 {
+        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout branch%d", g.gridTree.generation - 1), true)
+    } else {
+        g.logger.AddMessage("you$ ", "git checkout master", true)
+    }
+    g.logger.AddMessage("you$ ", "git merge " + g.gridTree.commitHash, true)
+    g.logger.AddMessage("", "Updating " + g.gridTree.prev.commitHash, true)
+    g.logger.AddMessage("", "Fast-forward", true)
+    g.logger.AddMessage("", " board.bson | 1 +", true)
+    g.logger.AddMessage("", " 1 file changed, 1 insertions(+)", true)
 	if g.gridTree.generation == 0 {
 		// There's nothing to merge up into if we're first generation.
 		return
