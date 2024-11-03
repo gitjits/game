@@ -28,39 +28,41 @@ type TileGrid struct {
 	IsSelectedGrid bool
 }
 
-func drawGridTree(tree *GridTree, screen *ebiten.Image, offsetY, offsetX int) {
+func drawGridTree(tree *GridTree, screen *ebiten.Image) {
 	// Draw current node
 	if tree.grid.SizeX == 0 {
 		fmt.Println("GRID IS NIL", tree.grid)
 		return
 	}
+	var curX int = screenWidth
+	cur_tree := *tree
+	for cur_tree.prev != nil {
+		curX -= 60
+		// Handle selected grid
+		if cur_tree.grid.IsSelectedGrid {
+			// Draw main selected grid in center
+			cur_tree.grid.X = screenWidth / 4
+			cur_tree.grid.Y = screenHeight / 4
+			cur_tree.grid.BoundsX = screenWidth / 2
+			cur_tree.grid.BoundsY = screenHeight / 2
+			ebitenutil.DebugPrintAt(screen, cur_tree.commitHash, screenWidth/2, screenHeight*(3/4))
 
-	// Handle selected grid
-	if tree.grid.IsSelectedGrid {
-		// Draw main selected grid in center
-		tree.grid.X = screenWidth / 4
-		tree.grid.Y = screenHeight / 4
-		tree.grid.BoundsX = screenWidth / 2
-		tree.grid.BoundsY = screenHeight / 2
-		ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
+			// Draw small version in tree
+			faux := createGrid(curX, screenHeight/2, cur_tree.grid.SizeX, cur_tree.grid.SizeY, 50, 50, cur_tree.grid.Color)
+			faux.Tiles = cur_tree.grid.Tiles
+			drawGrid(faux, screen)
+		} else {
+			cur_tree.grid.X = curX
+			cur_tree.grid.Y = (cur_tree.generation * 60) + (screenHeight / 2)
+			cur_tree.grid.BoundsX = 50
+			cur_tree.grid.BoundsY = 50
+		}
 
-		// Draw small version in tree
-		faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
-		faux.Tiles = tree.grid.Tiles
-		drawGrid(faux, screen)
-	} else {
-		tree.grid.X = offsetX + (tree.generation * 60)
-		tree.grid.Y = offsetY + (tree.generation * 60)
-		tree.grid.BoundsX = 50
-		tree.grid.BoundsY = 50
-	}
+		cur_tree.grid.Update()
+		drawGrid(cur_tree.grid, screen)
 
-	tree.grid.Update()
-	drawGrid(tree.grid, screen)
-
-	// Continue main branch
-	if tree.next != nil {
-		drawGridTree(tree.next, screen, offsetY, offsetX+60)
+		fmt.Printf("prev node %p, next %p, gen %d, %dx%d\n", cur_tree.prev, cur_tree.next, cur_tree.generation, cur_tree.grid.SizeX, cur_tree.grid.SizeY)
+		cur_tree = *cur_tree.prev
 	}
 }
 

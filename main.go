@@ -43,7 +43,13 @@ func (g *Game) init() {
 	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitCommitGrid(g, g.grid, false)
 	commitTestData(g)
-	fmt.Println(g.gridTree)
+
+	tree := g.gridTree
+	fmt.Printf("prev: %p\n", tree.prev)
+	for tree.prev != nil {
+		fmt.Printf("prev node %p, next %p, gen %d, %dx%d\n", tree.prev, tree.next, tree.generation, tree.grid.SizeX, tree.grid.SizeY)
+		tree = *tree.prev
+	}
 
 	fmt.Print("Setup fake Git repo!\n")
 }
@@ -58,7 +64,7 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGridTree(&g.gridTree, screen, 20, 20)
+	drawGridTree(&g.gridTree, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy

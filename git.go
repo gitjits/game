@@ -15,18 +15,19 @@ type GridTree struct {
 }
 
 func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
+	old := g.gridTree
 	node := GridTree{
 		grid:       grid,
-		prev:       &g.gridTree,
+		prev:       &old,
 		next:       nil,
-		generation: g.gridTree.generation,
+		generation: old.generation,
 	}
 	if branch {
 		node.generation++
 	}
-	g.gridTree.next = &node
+	old.next = &node
 	g.gridTree = node
-	// fmt.Println("prev node %p, replacing with %p. old's next is %p\n", node.prev, &node, node.prev.next)
+	fmt.Printf("prev node %p, replacing with %p. old's next is %p, gen %d\n", &old, &node, node.prev.next, node.generation)
 
 	return "blah"
 }
@@ -76,10 +77,10 @@ func commitTestData(g *Game) error {
 	fmt.Println("Created a commit on master", hash)
 
 	// Add commits to feature1
-	hash = gitCommitGrid(g, createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}), true)
+	hash = gitCommitGrid(g, createGrid(4, 4, 3, 3, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}), true)
 	fmt.Println("Created a commit on feature1", hash)
 
-	hash = gitCommitGrid(g, createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}), false)
+	hash = gitCommitGrid(g, createGrid(4, 4, 3, 3, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}), false)
 	fmt.Println("Created a commit on feature1", hash)
 
 	// Add commit to feature2
