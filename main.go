@@ -29,6 +29,7 @@ type Game struct {
 	autoScroll        bool
 	CPressedLastFrame bool
 	BPressedLastFrame bool
+	MPressedLastFrame bool
 }
 
 func (g *Game) init() {
@@ -96,6 +97,11 @@ func (g *Game) Update() error {
 		gitCommitGrid(g, newGrid, true)
 	}
 	g.BPressedLastFrame = BPressedNow
+	MPressedNow := ebiten.IsKeyPressed(ebiten.KeyM)
+	if MPressedNow && !g.MPressedLastFrame {
+        mergeCurrentBranch(g)
+	}
+	g.MPressedLastFrame = MPressedNow
 
 	return nil
 }

@@ -45,17 +45,17 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 }
 
 func mergeCurrentBranch(g *Game) {
+    fmt.Println("merge", g.gridTree.generation)
 	if g.gridTree.generation == 0 {
 		// There's nothing to merge up into if we're first generation.
 		return
 	}
-	node := g.gridTree
+	node := &g.gridTree
 	genOG := node.generation
 	for node.generation == genOG {
 		node.generation--
-		node = *node.prev
+		node = node.prev
 	}
-
 }
 
 func nukeCurrentBranch(g *Game) {
