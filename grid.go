@@ -45,12 +45,12 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
 
 		// Draw small version in tree
-		faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
+		faux := createGrid(offsetX, offsetY + tree.generation*110, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
 		faux.Tiles = tree.grid.Tiles
 		drawGrid(faux, screen)
 	} else {
 		tree.grid.X = offsetX
-		tree.grid.Y = offsetY
+		tree.grid.Y = offsetY + tree.generation*110
 		tree.grid.BoundsX = 110
 		tree.grid.BoundsY = 110
 	}
@@ -59,8 +59,8 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	drawGrid(tree.grid, screen)
 
 	// Continue main branch
-	if tree.next != nil {
-		drawGridTree(g, tree.next, screen, offsetY, offsetX+120)
+	if tree.prev != nil && tree.prev.grid.SizeX != 0 {
+		drawGridTree(g, tree.prev, screen, offsetY, offsetX+120)
 	}
 }
 
@@ -134,7 +134,7 @@ func (grid *TileGrid) Update(g *Game) {
 	if grid.IsSelectedGrid {
 		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 			grid.IsSelectedGrid = false
-            g.selected = false
+            g.selected = nil
 			fmt.Println("KILLED")
 		}
 		for j := 0; j < grid.SizeY; j++ {
@@ -150,11 +150,14 @@ func (grid *TileGrid) Update(g *Game) {
 			}
 		}
 	} else {
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) && !g.selected {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			mx, my := ebiten.CursorPosition()
 			if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
 				grid.IsSelectedGrid = true
-                g.selected = true
+                if g.selected != nil {
+                    g.selected.IsSelectedGrid = false
+                }
+                g.selected = grid
 			}
 		}
 	}

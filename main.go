@@ -21,7 +21,7 @@ var (
 type Game struct {
 	grid     TileGrid
 	gridTree GridTree
-    selected bool
+    selected *TileGrid
 
 	// Backing git repo to track grid changes
 	backingFS  billy.Filesystem
@@ -48,13 +48,6 @@ func (g *Game) init() {
 	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitCommitGrid(g, g.grid, false)
 	commitTestData(g)
-
-	tree := g.gridTree
-	fmt.Printf("prev: %p\n", tree.prev)
-	for tree.prev != nil {
-		fmt.Printf("prev node %p, next %p, gen %d, %dx%d\n", tree.prev, tree.next, tree.generation, tree.grid.SizeX, tree.grid.SizeY)
-		tree = *tree.prev
-	}
 
 	// We need a simplified commit tree to efficiently render it
     g.logger.AddMessage("ena")

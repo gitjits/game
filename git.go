@@ -84,7 +84,7 @@ func commitTestData(g *Game) error {
 	fmt.Println("Created a commit on feature1", hash)
 
 	// Add commit to feature2
-	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}), true)
+	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 0, B: 255, G: 0, A: 1}), true)
 	fmt.Println("Created a commit on feature2", hash)
 
 	return nil
