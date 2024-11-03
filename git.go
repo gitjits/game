@@ -44,6 +44,10 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool, cls bool) string {
 	g.gridTree = node
 	old.next = &g.gridTree
 	g.autoScroll = true
+    if g.selected != nil {
+        g.selected.IsSelectedGrid = false
+        g.selected = nil
+    }
 	g.selected = &grid
 	g.selected.IsSelectedGrid = true
 
@@ -95,6 +99,10 @@ func nukeCurrentBranch(g *Game) {
     prevNode := g.gridTree.prev
     prevNode.next = nil  // Break the circular reference
     g.gridTree = *prevNode
+    g.selected.IsSelectedGrid = false
+    g.selected = nil
+    g.selected = &g.gridTree.grid
+    g.selected.IsSelectedGrid = true
 }
 
 func gitSetup(g *Game) {
