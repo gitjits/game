@@ -85,6 +85,7 @@ func (g *Game) Update() error {
 		newGrid := g.gridTree.grid.Clone()
 		gitCommitGrid(g, newGrid, false)
 		g.selected = &g.gridTree.grid
+		g.selected.IsSelectedGrid = true
 	}
 	g.CPressedLastFrame = CPressedNow
 
