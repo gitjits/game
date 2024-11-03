@@ -25,10 +25,10 @@ func ListBranches(r *git.Repository) ([]plumbing.Hash, error) {
 	}
 
 	refs.ForEach(func(ref *plumbing.Reference) error {
-        if !ref.Name().IsBranch() {
-            return nil
-        }
-        branches = append(branches, ref.Hash())
+		if !ref.Name().IsBranch() {
+			return nil
+		}
+		branches = append(branches, ref.Hash())
 		return nil
 	})
 
@@ -73,48 +73,47 @@ type GridTree struct {
 	branch *GridTree
 }
 
-func gitSetup(g *Game) error {
-	// Create in-memory filesystem
-	g.backingFS = memfs.New()
-
-	// Setup git repo with in-memory filesystem
-	repo, err := git.Init(memory.NewStorage(), g.backingFS)
-	if err != nil {
-		return err
-	}
-	g.repo = repo
-
+func gitCommitGrid(g *Game, grid *TileGrid, message string) error {
 	// Save the grid to an in-memory file
 	file, err := g.backingFS.Create(gridFileName)
 	if err != nil {
 		fmt.Printf("Error creating file: %v\n", err)
 		return err
 	}
-	bytes, err := bson.Marshal(g.selectedGrid)
+	bytes, err := bson.Marshal(grid)
 	if err != nil {
 		fmt.Printf("Serialization error: %v\n", err)
 		return err
 	}
-
 	file.Write(bytes)
 	file.Close()
 
+	// Commit the new grid file
 	w, err := g.repo.Worktree()
 	if err != nil {
 		fmt.Print("Error getting current worktree!", err, "\n")
 		return err
 	}
-    _, err = w.Add(gridFileName)
-    if err != nil {
-        return err
-    }
-
-	err = createTestData(g)
+	_, err = w.Add(gridFileName)
 	if err != nil {
-		fmt.Printf("Error creating test data: %v\n", err)
 		return err
 	}
-	fmt.Printf("Initialized git repo and state file \"%s\"\n", gridFileName)
+	w.Commit(message, &git.CommitOptions{})
+
+	return nil
+}
+
+func gitSetup(g *Game) error {
+	var err error
+	// Create in-memory filesystem
+	g.backingFS = memfs.New()
+	g.cur_branch = "master"
+
+	// Setup git repo with in-memory filesystem
+	g.repo, err = git.Init(memory.NewStorage(), g.backingFS)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -185,7 +184,7 @@ func buildCommitTree(g *Game) (*GridTree, error) {
 	return head, err
 }
 
-func createTestData(g *Game) error {
+func commitTestData(g *Game) error {
 	w, err := g.repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("failed to get worktree: %w", err)
@@ -217,7 +216,6 @@ func createTestData(g *Game) error {
 
 	// Create initial commit on main
 	_, err = createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
-	fmt.Print("Created a commit\n")
 	if err != nil {
 		return err
 	}

@@ -19,9 +19,8 @@ const (
 )
 
 type Game struct {
-	selectedGrid TileGrid
-	grid         TileGrid
-	gridTree     *GridTree
+	grid     TileGrid
+	gridTree *GridTree
 
 	// Backing git repo to track grid changes
 	backingFS  billy.Filesystem
@@ -38,17 +37,25 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
-	//g.selectedGrid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
-    err := gitSetup(g)
-    if err != nil {
-        panic(err)
-    }
-	g.cur_branch = "master"
+	// Create the in-memory git repo
+	err := gitSetup(g)
+	if err != nil {
+		panic(err)
+	}
+
+	// Create basic test data in the repo
+	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+	gitCommitGrid(g, &g.grid, "Initial commit")
+	err = commitTestData(g)
+	if err != nil {
+		fmt.Printf("Error creating test data: %v\n", err)
+	}
+
+	// We need a simplified commit tree to efficiently render it
 	g.gridTree, err = buildCommitTree(g)
-    if err != nil {
-        panic(err)
-    }
-	//fmt.Println(g.gridTree)
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Print("Setup Git repo!\n")
 }
