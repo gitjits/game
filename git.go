@@ -183,8 +183,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Helper function to create a commit
-	createCommit := func(message string, c color.RGBA) (plumbing.Hash, error) {
-        grid := createGrid(4, 4, 4, 4, 4, 4, c)
+	createCommit := func(message string, grid TileGrid) (plumbing.Hash, error) {
 		file, err := w.Filesystem.Create(gridFileName)
 		if err != nil {
 			return plumbing.ZeroHash, err
@@ -208,7 +207,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create initial commit on main
-    _, err = createCommit("Initial commit on main", color.RGBA{R: 255, B: 255, G: 255, A: 1})
+    _, err = createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
 	fmt.Print("Created a commit\n")
 	if err != nil {
 		return err
@@ -224,11 +223,11 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commits to feature1
-    _, err = createCommit("First commit on feature1", color.RGBA{R: 255, B: 0, G: 0, A: 1})
+    _, err = createCommit("first com mit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}))
 	if err != nil {
 		return err
 	}
-    _, err = createCommit("Second commit on feature1", color.RGBA{R: 0, B: 0, G: 255, A: 1})
+    _, err = createCommit("Second commit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
@@ -239,7 +238,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add more commits to main
-    _, err = createCommit("Second commit on main", color.RGBA{R: 0, B: 255, G: 255, A: 1})
+    _, err = createCommit("Second commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 255, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
@@ -254,7 +253,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commit to feature2
-    _, err = createCommit("First commit on feature2", color.RGBA{R: 255, B: 0, G: 255, A: 1})
+    _, err = createCommit("First commit on feature2", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
@@ -263,7 +262,7 @@ func createTestData(repo *git.Repository) error {
 	if err := CheckoutBranch(repo, "master"); err != nil {
 		return err
 	}
-    _, err = createCommit("Third commit on main", color.RGBA{R: 255, B: 255, G: 0, A: 1})
+    _, err = createCommit("Third commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 255, G: 0, A: 1}))
 	if err != nil {
 		return err
 	}

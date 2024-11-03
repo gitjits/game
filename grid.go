@@ -100,7 +100,7 @@ func (grid *TileGrid) Update() {
 			if i%2 != 0 {
 				ymult = 2
 			}
-			X, Y := w*i+r, h*j+int(math.Floor(float64(r)*ymult))
+			X, Y := grid.X+w*i+r, grid.Y+h*j+int(math.Floor(float64(r)*ymult))
 			grid.Tiles[j][i].Width = w
 			grid.Tiles[j][i].Height = h
 			grid.Tiles[j][i].X = X
