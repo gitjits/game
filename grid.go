@@ -162,6 +162,33 @@ func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
 	return X, Y
 }
 
+func (grid *TileGrid) Clone() TileGrid {
+    ng := TileGrid{
+        X: grid.X,
+        Y: grid.Y,
+        SizeX: grid.SizeX,
+        SizeY: grid.SizeY,
+        BoundsX: grid.BoundsX,
+        BoundsY: grid.BoundsY,
+        Color: grid.Color,
+        IsSelectedGrid: grid.IsSelectedGrid,
+        ClickMap: grid.ClickMap,
+        selectedCells: grid.selectedCells,
+    }
+	ng.Tiles = make([][]*Tile, ng.SizeX)
+	for i := range ng.Tiles {
+		ng.Tiles[i] = make([]*Tile, ng.SizeY)
+	}
+    for j := 0; j < len(grid.Tiles); j++ {
+        for i := 0; i < len(grid.Tiles[j]); i++ {
+            x := *grid.Tiles[j][i]
+            ng.Tiles[j][i] = &x
+        }
+    }
+
+    return ng
+}
+
 func (grid *TileGrid) Update(g *Game) {
 	if grid.IsSelectedGrid {
 		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
@@ -177,14 +204,19 @@ func (grid *TileGrid) Update(g *Game) {
                         r := tileRadius(grid)
                         mx, my := ebiten.CursorPosition()
                         if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-                            grid.Tiles[j][i].Selected = true
+                            grid.IsSelectedGrid = false
+                            ng := grid.Clone()
+                            ng.Tiles[j][i].Selected = true
+                            gitCommitGrid(g, ng, false)
+                            g.selected = &ng
+                            g.selected.IsSelectedGrid = true
+                            grid.ClickMap["clickTile"] = true
+                            g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
+                            g.logger.AddMessage("", "[main d34db33f] select a piece", true)
+                            g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
                         }
                     }
                 }
-                grid.ClickMap["clickTile"] = true
-                g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
-                g.logger.AddMessage("", "[main d34db33f] select a piece", true)
-                g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
             }
         } else {
             grid.ClickMap["clickTile"] = false
