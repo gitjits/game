@@ -47,18 +47,12 @@ func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
-	r := grid.BoundsX / grid.SizeX / 2
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
-				w, h := r*2, r*2
-				ymult := 1.0
-				if i%2 != 0 {
-					ymult = 2
-				}
-				var Xpos = grid.X + w*i + r
-				var Ypos = grid.Y + h*j + int(math.Floor(float64(r)*ymult))
+				Xpos, Ypos := tileScreenPos(&grid, i, j)
+				r := tileRadius(&grid)
 				drawPolygon(6, Xpos, Ypos, r, tile.Color, screen)
 				fmt.Println(6, Xpos, Ypos, r, tile.Color)
 			}
@@ -94,17 +88,29 @@ func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, de
 	return grid
 }
 
+func tileRadius(grid *TileGrid) int {
+	return grid.BoundsX / grid.SizeX / 2
+}
+
+func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
+	r := tileRadius(grid)
+	w, h := r*2, r*2
+	ymult := 1.0
+	if (row % 2) != 0 {
+		ymult = 2
+	}
+
+	var X = grid.X + w*row + r
+	var Y = grid.Y + h*col + int(math.Floor(float64(r)*ymult))
+
+	return X, Y
+}
+
 func (grid *TileGrid) Update() {
 	for j := 0; j < grid.SizeY; j++ {
 		for i := 0; i < grid.SizeX; i++ {
-			r := grid.BoundsX / grid.SizeX / 2
-			w, h := r*2, r*2
-			ymult := 1.0
-			if i%2 != 0 {
-				ymult = 2
-			}
-
-			X, Y := grid.X+w*i+r, grid.Y+h*j+int(math.Floor(float64(r)*ymult))
+			X, Y := tileScreenPos(grid, i, j)
+			r := tileRadius(grid)
 			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 				mx, my := ebiten.CursorPosition()
 				if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
