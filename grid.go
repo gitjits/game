@@ -120,7 +120,7 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 				Xpos, Ypos := tileScreenPos(&grid, i, j)
 				op := &colorm.DrawImageOptions{}
 				scale := float64(float64(r) * 2.0 / 256.0)
-				op.GeoM.Scale(scale, scale)
+				op.GeoM.Scale(1.25*scale, scale*1.05)
 				op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
                 var cm colorm.ColorM
                 r := float64(tile.Color.R) / 0xff
