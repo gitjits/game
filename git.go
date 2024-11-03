@@ -30,7 +30,6 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	}
 	g.gridTree = node
 	old.next = &g.gridTree
-	fmt.Printf("prev node %p, replacing with %p. old's next is %p, gen %d\n", &old, &node, node.prev.next)
 
 	return "blah"
 }
