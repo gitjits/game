@@ -24,16 +24,34 @@ var LBJ_Img *ebiten.Image
 var NewtPNG []byte
 var NewtImg *ebiten.Image
 
+//go:embed phonomancer.png
+var PhonomancerPNG []byte
+var PhonomancerImg *ebiten.Image
+
+//go:embed wizzy.png
+var WizzyPNG []byte
+var WizzyImg *ebiten.Image
+
+//go:embed centepede.png
+var CentepedePNG []byte
+var CentepedeImg *ebiten.Image
+
 func loadEmbeddedImage() (err error) {
 	hi, _, err := image.Decode(bytes.NewReader(hexagonPng))
 	lbj_img, _, err := image.Decode(bytes.NewReader(LBJPNG))
 	newt_img, _, err := image.Decode(bytes.NewReader(NewtPNG))
+	phonomancer_img, _, err := image.Decode(bytes.NewReader(PhonomancerPNG))
+	wizzy_img, _, err := image.Decode(bytes.NewReader(WizzyPNG))
+	centepede_img, _, err := image.Decode(bytes.NewReader(CentepedePNG))
 	if err != nil {
 		return err
 	}
 	hexagonImg = ebiten.NewImageFromImage(hi)
 	LBJ_Img = ebiten.NewImageFromImage(lbj_img)
 	NewtImg = ebiten.NewImageFromImage(newt_img)
+	PhonomancerImg = ebiten.NewImageFromImage(phonomancer_img)
+	WizzyImg = ebiten.NewImageFromImage(wizzy_img)
+	CentepedeImg = ebiten.NewImageFromImage(centepede_img)
 	return nil
 }
 
@@ -236,6 +254,15 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			}
 			if tile.occupant.Name == UNIT_NEWTHANDS.Name {
 				screen.DrawImage(NewtImg, unitOptions)
+			}
+			if tile.occupant.Name == UNIT_WIZZY.Name {
+				screen.DrawImage(WizzyImg, unitOptions)
+			}
+			if tile.occupant.Name == UNIT_WING_CENTIPEDE.Name {
+				screen.DrawImage(CentepedeImg, unitOptions)
+			}
+			if tile.occupant.Name == UNIT_PHONOMANCER.Name {
+				screen.DrawImage(PhonomancerImg, unitOptions)
 			}
 		}
 	}

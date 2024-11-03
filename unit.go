@@ -30,12 +30,32 @@ var UNIT_NEWTHANDS Unit = Unit{Name: "Newt-Hands", MoveRange: 3, HP: 5, Starting
 var UNIT_LBJ Unit = Unit{Name: "Lyndon B. Johnson", MoveRange: 2, HP: 8, StartingHP: 8, Offense: 3, Defense: 6, Present: true}
 
 // Enemy units
-var UNIT_WING_CENTIPEDE Unit = Unit{Name: "Tri-Winged Centipede", MoveRange: 6, HP: 3, Offense: 4, Defense: 2, Present: true, BotUnit: true}
+var UNIT_WING_CENTIPEDE Unit = Unit{Name: "Tri-Winged Centipede", MoveRange: 6, HP: 3, StartingHP: 3, Offense: 4, Defense: 2, Present: true, BotUnit: true}
+var UNIT_WIZZY Unit = Unit{Name: "WIZZY", MoveRange: 10, HP: 1, StartingHP: 1, Offense: 8, Defense: 1, Present: true, BotUnit: true}
 
 func randomPopulate(grid *TileGrid) {
-	grid.Tiles[0][1].occupant = UNIT_LBJ
-	grid.Tiles[2][2].occupant = UNIT_PHONOMANCER
-	grid.Tiles[1][3].occupant = UNIT_NEWTHANDS
+    x := rand.IntN(9)
+    y := 5 + rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_LBJ
+    x = rand.IntN(9)
+    y = 5 + rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_NEWTHANDS
+    x = rand.IntN(9)
+    y = 5 + rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_PHONOMANCER
+
+    x = rand.IntN(9)
+    y = rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_WIZZY
+    x = rand.IntN(9)
+    y = rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_WIZZY
+    x = rand.IntN(9)
+    y = rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_WING_CENTIPEDE
+    x = rand.IntN(9)
+    y = rand.IntN(3)
+    grid.Tiles[x][y].occupant = UNIT_WING_CENTIPEDE
 }
 
 func reportWinner(self *Unit, opp *Unit, g *Game) {
