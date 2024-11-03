@@ -6,8 +6,8 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -17,72 +17,55 @@ type Tile struct {
 }
 
 type TileGrid struct {
-	Tiles   [][]*Tile
-	X       int
-	Y       int
-	SizeX   int
-	SizeY   int
-	BoundsX int
-	BoundsY int
-	Color   color.RGBA
-    IsSelectedGrid bool
+	Tiles          [][]*Tile
+	X              int
+	Y              int
+	SizeX          int
+	SizeY          int
+	BoundsX        int
+	BoundsY        int
+	Color          color.RGBA
+	IsSelectedGrid bool
 }
 
-func drawGridTree(tree *GridTree, screen *ebiten.Image, offsetY, offsetX int, visited map[string]bool) {
-    if tree == nil || visited[tree.commitHash] {
-        return
-    }
+func drawGridTree(tree *GridTree, screen *ebiten.Image, offsetY, offsetX int) {
+	// Draw current node
+	if tree.grid.SizeX == 0 {
+		fmt.Println("GRID IS NIL", tree.grid)
+		return
+	}
 
-    visited[tree.commitHash] = true
+	// Handle selected grid
+	if tree.grid.IsSelectedGrid {
+		// Draw main selected grid in center
+		tree.grid.X = screenWidth / 4
+		tree.grid.Y = screenHeight / 4
+		tree.grid.BoundsX = screenWidth / 2
+		tree.grid.BoundsY = screenHeight / 2
+		ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
 
-    // Draw current node
-    if tree.grid.SizeX == 0 {
-        fmt.Println("GRID IS NIL", tree.grid)
-        return
-    }
+		// Draw small version in tree
+		faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
+		faux.Tiles = tree.grid.Tiles
+		drawGrid(faux, screen)
+	} else {
+		tree.grid.X = offsetX + (tree.generation * 60)
+		tree.grid.Y = offsetY + (tree.generation * 60)
+		tree.grid.BoundsX = 50
+		tree.grid.BoundsY = 50
+	}
 
-    // Handle selected grid
-    if tree.grid.IsSelectedGrid {
-        // Draw main selected grid in center
-        tree.grid.X = screenWidth/4
-        tree.grid.Y = screenHeight/4
-        tree.grid.BoundsX = screenWidth/2
-        tree.grid.BoundsY = screenHeight/2
-        ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
+	tree.grid.Update()
+	drawGrid(tree.grid, screen)
 
-        // Draw small version in tree
-        faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
-        faux.Tiles = tree.grid.Tiles
-        drawGrid(faux, screen)
-    } else {
-        tree.grid.X = offsetX
-        tree.grid.Y = offsetY
-        tree.grid.BoundsX = 50
-        tree.grid.BoundsY = 50
-    }
-
-    tree.grid.Update()
-    drawGrid(tree.grid, screen)
-
-    // Recursively draw branches
-    if tree.branch != nil {
-        drawGridTree(tree.branch, screen, offsetY+60, offsetX+60, visited)
-    }
-
-    // Continue main branch
-    if tree.next != nil {
-        drawGridTree(tree.next, screen, offsetY, offsetX+60, visited)
-    }
-}
-
-// Call it like this:
-func drawGridTreeStart(startTree *GridTree, screen *ebiten.Image) {
-    visited := make(map[string]bool)
-    drawGridTree(startTree, screen, 60, 60, visited)
+	// Continue main branch
+	if tree.next != nil {
+		drawGridTree(tree.next, screen, offsetY, offsetX+60)
+	}
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
-    r := tileRadius(&grid)
+	r := tileRadius(&grid)
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
@@ -92,7 +75,7 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			}
 		}
 	}
-    vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
+	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
 }
 
 func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, defaultColor color.RGBA) TileGrid {
@@ -142,31 +125,31 @@ func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
 }
 
 func (grid *TileGrid) Update() {
-    if grid.IsSelectedGrid {
-        if ebiten.IsKeyPressed(ebiten.KeyEscape) {
-            grid.IsSelectedGrid = false
-            fmt.Println("KILLED")
-        }
-        for j := 0; j < grid.SizeY; j++ {
-            for i := 0; i < grid.SizeX; i++ {
-                X, Y := tileScreenPos(grid, i, j)
-                r := tileRadius(grid)
-                if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-                    mx, my := ebiten.CursorPosition()
-                    if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-                        grid.Tiles[j][i].Selected = true
-                    }
-                }
+	if grid.IsSelectedGrid {
+		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+			grid.IsSelectedGrid = false
+			fmt.Println("KILLED")
+		}
+		for j := 0; j < grid.SizeY; j++ {
+			for i := 0; i < grid.SizeX; i++ {
+				X, Y := tileScreenPos(grid, i, j)
+				r := tileRadius(grid)
+				if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+					mx, my := ebiten.CursorPosition()
+					if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+						grid.Tiles[j][i].Selected = true
+					}
+				}
 
-                //fmt.Println(grid.Tiles[j][i])
-            }
-        }
-    } else {
-        if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-            mx, my := ebiten.CursorPosition()
-            if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
-                grid.IsSelectedGrid = true
-            }
-        }
-    }
+				//fmt.Println(grid.Tiles[j][i])
+			}
+		}
+	} else {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			mx, my := ebiten.CursorPosition()
+			if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
+				grid.IsSelectedGrid = true
+			}
+		}
+	}
 }

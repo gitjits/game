@@ -20,7 +20,7 @@ const (
 
 type Game struct {
 	grid     TileGrid
-	gridTree *GridTree
+	gridTree GridTree
 
 	// Backing git repo to track grid changes
 	backingFS  billy.Filesystem
@@ -37,27 +37,15 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
-	// Create the in-memory git repo
-	err := gitSetup(g)
-	if err != nil {
-		panic(err)
-	}
+	g.gridTree = GridTree{}
 
 	// Create basic test data in the repo
 	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
-	gitCommitGrid(g, &g.grid, "Initial commit")
-	err = commitTestData(g)
-	if err != nil {
-		fmt.Printf("Error creating test data: %v\n", err)
-	}
+	gitCommitGrid(g, g.grid, false)
+	commitTestData(g)
+	fmt.Println(g.gridTree)
 
-	// We need a simplified commit tree to efficiently render it
-	g.gridTree, err = buildCommitTree(g)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Print("Setup Git repo!\n")
+	fmt.Print("Setup fake Git repo!\n")
 }
 
 func (g *Game) Update() error {
@@ -70,8 +58,7 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGridTreeStart(g.gridTree, screen)
-	//drawGrid(g.grid, screen)
+	drawGridTree(&g.gridTree, screen, 20, 20)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy
