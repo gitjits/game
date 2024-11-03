@@ -26,6 +26,7 @@ type Game struct {
 
 	logger *LogWindow
     scrollX int
+    autoScroll bool
 }
 
 func (g *Game) init() {
@@ -92,13 +93,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		t2 = *t2.prev
 	}
     if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-        if (t2.next.grid.X < 175) {
+        if t2.next.grid.X < 185 {
             g.scrollX += 1
         }
-    }
-    if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
-        if g.gridTree.grid.X > 850 {
+    } else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) || g.autoScroll {
+        if g.gridTree.grid.X > 840 {
             g.scrollX -= 1
+        } else {
+            g.autoScroll = false
         }
     }
 	drawGridTree(g, &t2, screen, 50, g.scrollX)

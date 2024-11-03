@@ -30,6 +30,7 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	}
 	g.gridTree = node
 	old.next = &g.gridTree
+    g.autoScroll = true
 
 	return "blah"
 }
