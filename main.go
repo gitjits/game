@@ -19,7 +19,7 @@ const (
 )
 
 type Game struct {
-	grid TileGrid
+	selectedGrid TileGrid
     gridTree GridTree
 
 	// Backing git repo to track grid changes
@@ -37,7 +37,7 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
-	//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+	//g.selectedGrid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitSetup(g)
     g.gridTree = iterCommits(g)
     //fmt.Println(g.gridTree)
@@ -50,7 +50,6 @@ func (g *Game) Update() error {
 		g.init()
 	}
 
-	g.grid.Update()
 	return nil
 }
 

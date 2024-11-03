@@ -90,7 +90,7 @@ func gitSetup(g *Game) bool {
 		fmt.Printf("Error creating file: %v\n", err)
 		return false
 	}
-	bytes, err := bson.Marshal(g.grid)
+	bytes, err := bson.Marshal(g.selectedGrid)
 	if err != nil {
 		fmt.Printf("Serialization error: %v\n", err)
 		return false

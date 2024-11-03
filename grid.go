@@ -23,6 +23,7 @@ type TileGrid struct {
 	BoundsX int
 	BoundsY int
 	Color   color.RGBA
+    IsSelectedGrid bool
 }
 
 func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
@@ -32,15 +33,23 @@ func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
 		if tree.branch != nil {
 			//drawGridTree(tree, screen, offsetY + 60)
 		}
-		//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
-		tree.grid.X = offsetX
-		tree.grid.Y = offsetY
-		tree.grid.BoundsX = 50
-		tree.grid.BoundsY = 50
+        if !tree.grid.IsSelectedGrid {
+            tree.grid.X = offsetX
+            tree.grid.Y = offsetY
+            tree.grid.BoundsX = 50
+            tree.grid.BoundsY = 50
+        } else {
+            tree.grid.X = screenWidth/4
+            tree.grid.Y = screenHeight/4
+            tree.grid.BoundsX = screenWidth/2
+            tree.grid.BoundsY = screenHeight/2
+            faux := createGrid(offsetX, offsetY, tree.grid.SizeX, tree.grid.SizeY, 50, 50, tree.grid.Color)
+            faux.Tiles = tree.grid.Tiles
+            drawGrid(faux, screen)
+        }
 		tree.grid.Update()
 		drawGrid(tree.grid, screen)
-		//fmt.Println("Drawing", tree.grid)
-		fmt.Println(tree.grid)
+		//fmt.Println(tree.grid)
 		tree = tree.next
 		offsetX += 60
 	}
@@ -54,7 +63,6 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 				Xpos, Ypos := tileScreenPos(&grid, i, j)
 				r := tileRadius(&grid)
 				drawPolygon(6, Xpos, Ypos, r, tile.Color, screen)
-				fmt.Println(6, Xpos, Ypos, r, tile.Color)
 			}
 		}
 	}
@@ -107,18 +115,31 @@ func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
 }
 
 func (grid *TileGrid) Update() {
-	for j := 0; j < grid.SizeY; j++ {
-		for i := 0; i < grid.SizeX; i++ {
-			X, Y := tileScreenPos(grid, i, j)
-			r := tileRadius(grid)
-			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-				mx, my := ebiten.CursorPosition()
-				if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-					grid.Tiles[j][i].Selected = true
-				}
-			}
+    if grid.IsSelectedGrid {
+        if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+            grid.IsSelectedGrid = false
+            fmt.Println("KILLED")
+        }
+        for j := 0; j < grid.SizeY; j++ {
+            for i := 0; i < grid.SizeX; i++ {
+                X, Y := tileScreenPos(grid, i, j)
+                r := tileRadius(grid)
+                if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+                    mx, my := ebiten.CursorPosition()
+                    if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+                        grid.Tiles[j][i].Selected = true
+                    }
+                }
 
-			//fmt.Println(grid.Tiles[j][i])
-		}
-	}
+                //fmt.Println(grid.Tiles[j][i])
+            }
+        }
+    } else {
+        if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+            mx, my := ebiten.CursorPosition()
+            if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
+                grid.IsSelectedGrid = true
+            }
+        }
+    }
 }
