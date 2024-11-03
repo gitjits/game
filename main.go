@@ -45,7 +45,8 @@ func (g *Game) init() {
     g.logger = NewLogWindow()
 
 	// Create basic test data in the repo
-	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
+    g.grid.Update(g)
 	gitCommitGrid(g, g.grid, false)
 	commitTestData(g)
 

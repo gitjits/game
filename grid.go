@@ -7,7 +7,6 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -36,13 +35,19 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
+    if g.selected != nil {
+        fmt.Println(g.selected.Color)
+		g.selected.X = screenWidth / 2 - 150
+		g.selected.Y = screenHeight / 2 - 150
+		g.selected.BoundsX = 310
+		g.selected.BoundsY = 310
+        g.selected.Update(g)
+        if g.selected != nil {
+            drawGrid(*g.selected, screen)
+        }
+    }
 	if tree.grid.IsSelectedGrid {
 		// Draw main selected grid in center
-		tree.grid.X = screenWidth / 2 - 150
-		tree.grid.Y = screenHeight / 2 - 150
-		tree.grid.BoundsX = 310
-		tree.grid.BoundsY = 310
-		ebitenutil.DebugPrintAt(screen, tree.commitHash, screenWidth/2, screenHeight*(3/4))
 
 		// Draw small version in tree
 		faux := createGrid(offsetX, offsetY + tree.generation*110, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
