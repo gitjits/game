@@ -25,12 +25,14 @@ type Game struct {
 	inited bool
 
 	logger *LogWindow
+    scrollX int
 }
 
 func (g *Game) init() {
 	defer func() {
 		g.inited = true
 	}()
+    g.scrollX = 50
 
     err := loadEmbeddedImage()
     if err != nil {
@@ -89,7 +91,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for t2.prev != nil && t2.prev.grid.SizeX != 0 {
 		t2 = *t2.prev
 	}
-	drawGridTree(g, &t2, screen, 50, 50)
+    if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+        if (t2.next.grid.X < 175) {
+            g.scrollX += 1
+        }
+    }
+    if ebiten.IsKeyPressed(ebiten.KeyArrowRight) {
+        if g.gridTree.grid.X > 850 {
+            g.scrollX -= 1
+        }
+    }
+	drawGridTree(g, &t2, screen, 50, g.scrollX)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
 	g.logger.Draw(screen)
 }
