@@ -1,13 +1,29 @@
 package main
 
 import (
+	"bytes"
+	_ "embed"
 	"fmt"
+	"image"
 	"image/color"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
+
+//go:embed hexagon.png
+var hexagonPng []byte
+var hexagonImg *ebiten.Image
+
+func loadEmbeddedImage() (err error) {
+    hi , _, err := image.Decode(bytes.NewReader(hexagonPng))
+    if err != nil {
+        return err
+    }
+    hexagonImg = ebiten.NewImageFromImage(hi)
+    return nil
+}
 
 type Tile struct {
 	Selected bool
@@ -102,7 +118,20 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
 				Xpos, Ypos := tileScreenPos(&grid, i, j)
-				drawPolygon(6, Xpos, Ypos, r, tile.Color, screen)
+				op := &ebiten.DrawImageOptions{}
+				scale := float64(float64(r) * 2.0 / 256.0)
+				op.GeoM.Scale(scale, scale)
+				op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
+                /*
+                var cm colorm.ColorM
+                cm.Scale(0, 0, 0, 1)
+                r := float64(tile.Color.R) / 0xff
+                g := float64(tile.Color.G) / 0xff
+                b := float64(tile.Color.B) / 0xff
+                cm.Translate(r, g, b, 0)
+				colorm.DrawImage(screen, coloredHex, cm, op)
+                */
+                screen.DrawImage(hexagonImg, op)
 			}
 		}
 	}

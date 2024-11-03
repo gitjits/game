@@ -32,6 +32,11 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 
+    err := loadEmbeddedImage()
+    if err != nil {
+        panic(err)
+    }
+
 	g.gridTree = GridTree{}
 
 	g.logger = NewLogWindow()
