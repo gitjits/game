@@ -35,6 +35,7 @@ type Game struct {
 
 	infoSprite Unit
 	hidden     bool
+    stop bool
 }
 
 func (g *Game) init() {
@@ -98,6 +99,9 @@ func (g *Game) init() {
 }
 
 func (g *Game) Update() error {
+    if g.stop {
+        return nil
+    }
 	if !g.inited {
 		g.init()
 	}

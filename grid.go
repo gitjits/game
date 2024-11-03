@@ -174,18 +174,6 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
-	if g.selected != nil && !g.hidden {
-		g.selected.X = screenWidth/2 - 150
-		g.selected.Y = screenHeight/2 - 150
-		g.selected.BoundsX = 310
-		g.selected.BoundsY = 340
-		g.selected.Update(g)
-		if g.selected != nil {
-			r := tileRadius(g.selected)
-			vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
-			drawGrid(*g.selected, screen, g)
-		}
-	}
 	if tree.grid.IsSelectedGrid {
 		// Draw main selected grid in center
 
@@ -206,6 +194,18 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	// Continue main branch
 	if tree.next != nil && tree.next.grid.SizeX != 0 {
 		drawGridTree(g, tree.next, screen, offsetY, offsetX+135)
+	}
+	if g.selected != nil && !g.hidden {
+		g.selected.X = screenWidth/2 - 150
+		g.selected.Y = screenHeight/2 - 150
+		g.selected.BoundsX = 310
+		g.selected.BoundsY = 340
+		g.selected.Update(g)
+		if g.selected != nil {
+			r := tileRadius(g.selected)
+			vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
+			drawGrid(*g.selected, screen, g)
+		}
 	}
 }
 
@@ -282,14 +282,15 @@ func drawGrid(grid TileGrid, screen *ebiten.Image, g *Game) {
 			}
 		}
 	}
-	if p2Dead && cil && g.gridTree.generation == 0 {
+	if p2Dead && !g.stop && cil && g.gridTree.generation == 0 {
 		g.logger.AddMessage("you$ ", "git push origin main", false)
 		g.logger.AddMessage("", "You win!", false)
 		g.gridTree.generation = -3
-	} else if p1Dead && cil && g.gridTree.generation == 0 {
+        g.stop = true
+	} else if p1Dead && !g.stop && cil && g.gridTree.generation == 0 {
 		g.logger.AddMessage("you$ ", "sudo rm -rf / --no-preserve-root", false)
 		g.logger.AddMessage("", "whoops. it's over", false)
-		g.gridTree.generation = -3
+        g.stop = true
 	}
 	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
 }
@@ -375,7 +376,7 @@ func (grid *TileGrid) Clone() TileGrid {
 }
 
 func (grid *TileGrid) Update(g *Game) {
-	if grid.IsSelectedGrid && !g.hidden {
+	if grid.IsSelectedGrid && !g.hidden && !g.stop {
 		mx, my := ebiten.CursorPosition()
 		for j := 0; j < grid.SizeY; j++ {
 			for i := 0; i < grid.SizeX; i++ {
