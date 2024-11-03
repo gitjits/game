@@ -132,6 +132,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	drawGridTree(g, &t2, screen, 50, g.scrollX)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
+    ebitenutil.DebugPrintAt(screen, "Controls:\n\tc: commit\n\tb: new branch\n\tm: merge\n\tr: revert", screenWidth - 100, 0)
 	g.logger.Draw(screen)
 }
 

@@ -62,7 +62,7 @@ func mergeCurrentBranch(g *Game) {
     if g.gridTree.generation - 1 > 0 {
         g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout branch%d", g.gridTree.generation - 1), true)
     } else {
-        g.logger.AddMessage("you$ ", "git checkout master", true)
+        g.logger.AddMessage("you$ ", "git checkout main", true)
     }
     g.logger.AddMessage("you$ ", "git merge " + g.gridTree.commitHash, true)
     g.logger.AddMessage("", "Updating " + g.gridTree.prev.commitHash, true)
