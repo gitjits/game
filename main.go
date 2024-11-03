@@ -24,21 +24,22 @@ type Game struct {
 	op     ebiten.DrawImageOptions
 	inited bool
 
-	logger *LogWindow
-    scrollX int
-    autoScroll bool
+	logger            *LogWindow
+	scrollX           int
+	autoScroll        bool
+	CPressedLastFrame bool
 }
 
 func (g *Game) init() {
 	defer func() {
 		g.inited = true
 	}()
-    g.scrollX = 50
+	g.scrollX = 50
 
-    err := loadEmbeddedImage()
-    if err != nil {
-        panic(err)
-    }
+	err := loadEmbeddedImage()
+	if err != nil {
+		panic(err)
+	}
 
 	g.gridTree = GridTree{}
 
@@ -60,21 +61,21 @@ func (g *Game) init() {
 	//commitTestData(g)
 
 	// We need a simplified commit tree to efficiently render it
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("", "", false)
-    g.logger.AddMessage("ur_enemy$ ", "git init", false)
-    g.logger.AddMessage("ur_enemy$ ", "git commit -m 'welcome to the game'", false)
-    g.logger.AddMessage("", "[main e5e8386] welcome to the game", false)
-    g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", false)
-    g.logger.AddMessage("", "create mode 100644 board.bson", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("ur_enemy$ ", "git init", false)
+	g.logger.AddMessage("ur_enemy$ ", "git commit -m 'welcome to the game'", false)
+	g.logger.AddMessage("", "[main e5e8386] welcome to the game", false)
+	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", false)
+	g.logger.AddMessage("", "create mode 100644 board.bson", false)
 	fmt.Print("Setup Git repo!\n")
 }
 
@@ -82,6 +83,12 @@ func (g *Game) Update() error {
 	if !g.inited {
 		g.init()
 	}
+	CPressedNow := ebiten.IsKeyPressed(ebiten.KeyC)
+	if CPressedNow && !g.CPressedLastFrame {
+		newGrid := g.gridTree.grid.Clone()
+		gitCommitGrid(g, newGrid, false)
+	}
+	g.CPressedLastFrame = CPressedNow
 
 	return nil
 }
@@ -92,17 +99,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for t2.prev != nil && t2.prev.grid.SizeX != 0 {
 		t2 = *t2.prev
 	}
-    if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
-        if t2.next.grid.X < 185 {
-            g.scrollX += 1
-        }
-    } else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) || g.autoScroll {
-        if g.gridTree.grid.X > 840 {
-            g.scrollX -= 1
-        } else {
-            g.autoScroll = false
-        }
-    }
+	if ebiten.IsKeyPressed(ebiten.KeyArrowLeft) {
+		if t2.next.grid.X < 185 {
+			g.scrollX += 1
+		}
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowRight) || g.autoScroll {
+		if g.gridTree.grid.X > 840 {
+			g.scrollX -= 1
+		} else {
+			g.autoScroll = false
+		}
+	}
 	drawGridTree(g, &t2, screen, 50, g.scrollX)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
 	g.logger.Draw(screen)

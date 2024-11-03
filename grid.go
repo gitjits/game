@@ -17,12 +17,12 @@ var hexagonPng []byte
 var hexagonImg *ebiten.Image
 
 func loadEmbeddedImage() (err error) {
-    hi , _, err := image.Decode(bytes.NewReader(hexagonPng))
-    if err != nil {
-        return err
-    }
-    hexagonImg = ebiten.NewImageFromImage(hi)
-    return nil
+	hi, _, err := image.Decode(bytes.NewReader(hexagonPng))
+	if err != nil {
+		return err
+	}
+	hexagonImg = ebiten.NewImageFromImage(hi)
+	return nil
 }
 
 type Tile struct {
@@ -47,7 +47,7 @@ type TileGrid struct {
 	BoundsY        int
 	Color          color.RGBA
 	IsSelectedGrid bool
-    ClickMap       map[string]bool
+	ClickMap       map[string]bool
 
 	// 2 positions can be selected
 	selectedCells [2]vec2i
@@ -70,6 +70,38 @@ func (grid *TileGrid) clearSelection() {
 	grid.selectedCells[1] = vec2i{}
 }
 
+func (grid *TileGrid) applyMove() {
+	if !grid.selectedCells[1].valid {
+		return
+	}
+
+	// User wants to make a move!
+	pos1 := grid.selectedCells[0]
+	pos2 := grid.selectedCells[1]
+	source := grid.Tiles[pos1.x][pos1.y]
+	target := grid.Tiles[pos2.x][pos2.y]
+
+	if !source.occupant.Present {
+		// No one's here, they can just move.
+		*target = *source
+		source.occupant = Unit{Present: false}
+		source.Color = color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
+	} else {
+		source.occupant.attackEnemy(&target.occupant)
+		if target.occupant.HP <= 0 {
+			// Attacker won, move into the cell
+			target.occupant = source.occupant
+			source.occupant = Unit{Present: false}
+		} else if source.occupant.HP <= 0 {
+			// Attacker lost, delete them
+			source.occupant = Unit{Present: false}
+		}
+	}
+
+	// The move is over, selection vanishes no matter what
+	grid.clearSelection()
+}
+
 func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offsetX int) {
 	// Draw current node
 	if tree.grid.SizeX == 0 {
@@ -78,9 +110,9 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
-    if g.selected != nil {
-		g.selected.X = screenWidth / 2 - 150
-		g.selected.Y = screenHeight / 2 - 150
+	if g.selected != nil {
+		g.selected.X = screenWidth/2 - 150
+		g.selected.Y = screenHeight/2 - 150
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 340
 		g.selected.Update(g)
@@ -122,11 +154,11 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 				scale := float64(float64(r) * 2.0 / 256.0)
 				op.GeoM.Scale(1.25*scale, scale*1.05)
 				op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
-                var cm colorm.ColorM
-                r := float64(tile.Color.R) / 0xff
-                g := float64(tile.Color.G) / 0xff
-                b := float64(tile.Color.B) / 0xff
-                cm.Scale(r, g, b, 1)
+				var cm colorm.ColorM
+				r := float64(tile.Color.R) / 0xff
+				g := float64(tile.Color.G) / 0xff
+				b := float64(tile.Color.B) / 0xff
+				cm.Scale(r, g, b, 1)
 				colorm.DrawImage(screen, hexagonImg, cm, op)
 			}
 		}
@@ -136,14 +168,14 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 
 func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, defaultColor color.RGBA) TileGrid {
 	grid := TileGrid{
-		X:       X,
-		Y:       Y,
-		SizeX:   SizeX,
-		SizeY:   SizeY,
-		BoundsX: BoundsX,
-		BoundsY: BoundsY,
-		Color:   defaultColor,
-        ClickMap: make(map[string]bool),
+		X:        X,
+		Y:        Y,
+		SizeX:    SizeX,
+		SizeY:    SizeY,
+		BoundsX:  BoundsX,
+		BoundsY:  BoundsY,
+		Color:    defaultColor,
+		ClickMap: make(map[string]bool),
 	}
 	grid.Tiles = make([][]*Tile, grid.SizeX)
 	for i := range grid.Tiles {
@@ -188,30 +220,30 @@ func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
 }
 
 func (grid *TileGrid) Clone() TileGrid {
-    ng := TileGrid{
-        X: grid.X,
-        Y: grid.Y,
-        SizeX: grid.SizeX,
-        SizeY: grid.SizeY,
-        BoundsX: grid.BoundsX,
-        BoundsY: grid.BoundsY,
-        Color: grid.Color,
-        IsSelectedGrid: grid.IsSelectedGrid,
-        ClickMap: grid.ClickMap,
-        selectedCells: grid.selectedCells,
-    }
+	ng := TileGrid{
+		X:              grid.X,
+		Y:              grid.Y,
+		SizeX:          grid.SizeX,
+		SizeY:          grid.SizeY,
+		BoundsX:        grid.BoundsX,
+		BoundsY:        grid.BoundsY,
+		Color:          grid.Color,
+		IsSelectedGrid: grid.IsSelectedGrid,
+		ClickMap:       grid.ClickMap,
+		selectedCells:  grid.selectedCells,
+	}
 	ng.Tiles = make([][]*Tile, ng.SizeX)
 	for i := range ng.Tiles {
 		ng.Tiles[i] = make([]*Tile, ng.SizeY)
 	}
-    for j := 0; j < len(grid.Tiles); j++ {
-        for i := 0; i < len(grid.Tiles[j]); i++ {
-            x := *grid.Tiles[j][i]
-            ng.Tiles[j][i] = &x
-        }
-    }
+	for j := 0; j < len(grid.Tiles); j++ {
+		for i := 0; i < len(grid.Tiles[j]); i++ {
+			x := *grid.Tiles[j][i]
+			ng.Tiles[j][i] = &x
+		}
+	}
 
-    return ng
+	return ng
 }
 
 func (grid *TileGrid) Update(g *Game) {
@@ -221,58 +253,34 @@ func (grid *TileGrid) Update(g *Game) {
 			g.selected = nil
 			fmt.Println("KILLED")
 		}
-        if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-            if !grid.ClickMap["clickTile"] {
-                for j := 0; j < grid.SizeY; j++ {
-                    for i := 0; i < grid.SizeX; i++ {
-                        X, Y := tileScreenPos(grid, i, j)
-                        r := tileRadius(grid)
-                        mx, my := ebiten.CursorPosition()
-                        if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-                            grid.IsSelectedGrid = false
-                            ng := grid.Clone()
-                            ng.Tiles[j][i].Selected = true
-                            gitCommitGrid(g, ng, false)
-                            g.selected = &ng
-                            g.selected.IsSelectedGrid = true
-                            grid.ClickMap["clickTile"] = true
-                            g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
-                            g.logger.AddMessage("", "[main d34db33f] select a piece", true)
-                            g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
-                        }
-                    }
-                }
-            }
-        } else {
-            grid.ClickMap["clickTile"] = false
-        }
-
-		if grid.selectedCells[1].valid {
-			// User wants to make a move!
-			pos1 := grid.selectedCells[0]
-			pos2 := grid.selectedCells[1]
-			source := grid.Tiles[pos1.x][pos1.y]
-			target := grid.Tiles[pos2.x][pos2.y]
-
-			if !source.occupant.Present {
-				// No one's here, they can just move.
-				target.occupant = source.occupant
-				source.occupant = Unit{Present: false}
-			} else {
-				source.occupant.attackEnemy(&target.occupant)
-				if target.occupant.HP <= 0 {
-					// Attacker won, move into the cell
-					target.occupant = source.occupant
-					source.occupant = Unit{Present: false}
-				} else if source.occupant.HP <= 0 {
-					// Attacker lost, delete them
-					source.occupant = Unit{Present: false}
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			if !grid.ClickMap["clickTile"] {
+				for j := 0; j < grid.SizeY; j++ {
+					for i := 0; i < grid.SizeX; i++ {
+						X, Y := tileScreenPos(grid, i, j)
+						r := tileRadius(grid)
+						mx, my := ebiten.CursorPosition()
+						if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+							grid.IsSelectedGrid = false
+							grid.addSelection(vec2i{x: j, y: i})
+							ng := grid.Clone()
+							g.selected = &ng
+							g.selected.IsSelectedGrid = true
+							grid.ClickMap["clickTile"] = true
+							/*
+								g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
+								g.logger.AddMessage("", "[main d34db33f] select a piece", true)
+								g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
+							*/
+						}
+					}
 				}
 			}
-
-			// The move is over, selection vanishes no matter what
-			grid.clearSelection()
+		} else {
+			grid.ClickMap["clickTile"] = false
 		}
+
+		grid.applyMove()
 	} else {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			mx, my := ebiten.CursorPosition()
