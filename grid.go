@@ -59,8 +59,8 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	drawGrid(tree.grid, screen)
 
 	// Continue main branch
-	if tree.prev != nil && tree.prev.grid.SizeX != 0 {
-		drawGridTree(g, tree.prev, screen, offsetY, offsetX+120)
+	if tree.next != nil && tree.next.grid.SizeX != 0 {
+		drawGridTree(g, tree.next, screen, offsetY, offsetX+120)
 	}
 }
 

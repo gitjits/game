@@ -77,7 +77,11 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGridTree(g, &g.gridTree, screen, 50, 50)
+    t2 := g.gridTree
+    for t2.prev != nil && t2.prev.grid.SizeX != 0 {
+        t2 = *t2.prev
+    }
+	drawGridTree(g, &t2, screen, 50, 50)
     g.logger.Draw(screen)
 	//drawGrid(g.grid, screen)
 	// Draw each sprite.
