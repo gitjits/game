@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
@@ -82,7 +82,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		g.selected.X = screenWidth / 2 - 150
 		g.selected.Y = screenHeight / 2 - 150
 		g.selected.BoundsX = 310
-		g.selected.BoundsY = 310
+		g.selected.BoundsY = 340
 		g.selected.Update(g)
 		if g.selected != nil {
 			drawGrid(*g.selected, screen)
@@ -92,14 +92,14 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		// Draw main selected grid in center
 
 		// Draw small version in tree
-		faux := createGrid(offsetX, offsetY+tree.generation*120, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
+		faux := createGrid(offsetX, offsetY+tree.generation*125, tree.grid.SizeX, tree.grid.SizeY, 115, 123, tree.grid.Color)
 		faux.Tiles = tree.grid.Tiles
 		drawGrid(faux, screen)
 	} else {
 		tree.grid.X = offsetX
-		tree.grid.Y = offsetY + tree.generation*120
-		tree.grid.BoundsX = 110
-		tree.grid.BoundsY = 110
+		tree.grid.Y = offsetY + tree.generation*125
+		tree.grid.BoundsX = 115
+		tree.grid.BoundsY = 123
 	}
 
 	tree.grid.Update(g)
@@ -107,7 +107,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 
 	// Continue main branch
 	if tree.next != nil && tree.next.grid.SizeX != 0 {
-		drawGridTree(g, tree.next, screen, offsetY, offsetX+120)
+		drawGridTree(g, tree.next, screen, offsetY, offsetX+135)
 	}
 }
 
@@ -118,20 +118,16 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
 				Xpos, Ypos := tileScreenPos(&grid, i, j)
-				op := &ebiten.DrawImageOptions{}
+				op := &colorm.DrawImageOptions{}
 				scale := float64(float64(r) * 2.0 / 256.0)
 				op.GeoM.Scale(scale, scale)
 				op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
-                /*
                 var cm colorm.ColorM
-                cm.Scale(0, 0, 0, 1)
                 r := float64(tile.Color.R) / 0xff
                 g := float64(tile.Color.G) / 0xff
                 b := float64(tile.Color.B) / 0xff
-                cm.Translate(r, g, b, 0)
-				colorm.DrawImage(screen, coloredHex, cm, op)
-                */
-                screen.DrawImage(hexagonImg, op)
+                cm.Scale(r, g, b, 1)
+				colorm.DrawImage(screen, hexagonImg, cm, op)
 			}
 		}
 	}
@@ -185,8 +181,8 @@ func tileScreenPos(grid *TileGrid, row int, col int) (int, int) {
 		ymult = 2
 	}
 
-	var X = grid.X + w*row + r
-	var Y = grid.Y + h*col + int(math.Floor(float64(r)*ymult))
+	var X = grid.X + 2 + w*row + r
+	var Y = grid.Y + 3 + int(float64(h)*float64(col)*1.1) + int(float64(r)*ymult)
 
 	return X, Y
 }
