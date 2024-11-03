@@ -78,17 +78,17 @@ func (grid *TileGrid) addSelection(coord vec2i) {
 }
 
 func (grid *TileGrid) Equals(ng TileGrid) bool {
-    if len(ng.Tiles) != len(grid.Tiles) {
-        return false
-    }
+	if len(ng.Tiles) != len(grid.Tiles) {
+		return false
+	}
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			if grid.Tiles[j][i].occupant != ng.Tiles[j][i].occupant {
-                return false
-            }
+				return false
+			}
 			if grid.Tiles[j][i].Color != ng.Tiles[j][i].Color {
-                return false
-            }
+				return false
+			}
 		}
 	}
 	return true
@@ -118,6 +118,11 @@ func (grid *TileGrid) applyMove() {
 	// User wants to make a move!
 	pos1 := grid.selectedCells[0]
 	pos2 := grid.selectedCells[1]
+	if pos1.x == pos2.x && pos1.y == pos2.y {
+		// Source is the same as target, cancel the move
+		grid.clearSelection()
+		return
+	}
 	source := grid.Tiles[pos1.x][pos1.y]
 	target := grid.Tiles[pos2.x][pos2.y]
 
@@ -156,9 +161,9 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 340
 		g.selected.Update(g)
-        if g.selected != nil {
-            r := tileRadius(g.selected)
-            vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
+		if g.selected != nil {
+			r := tileRadius(g.selected)
+			vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
 			drawGrid(*g.selected, screen)
 		}
 	}
@@ -301,16 +306,16 @@ func (grid *TileGrid) Clone() TileGrid {
 
 func (grid *TileGrid) Update(g *Game) {
 	if grid.IsSelectedGrid && !g.hidden {
-        mx, my := ebiten.CursorPosition()
-        for j := 0; j < grid.SizeY; j++ {
-            for i := 0; i < grid.SizeX; i++ {
-                X, Y := tileScreenPos(grid, i, j)
-                r := tileRadius(grid)
-                if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-                    g.infoSprite = grid.Tiles[j][i].occupant;
-                }
-            }
-        }
+		mx, my := ebiten.CursorPosition()
+		for j := 0; j < grid.SizeY; j++ {
+			for i := 0; i < grid.SizeX; i++ {
+				X, Y := tileScreenPos(grid, i, j)
+				r := tileRadius(grid)
+				if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+					g.infoSprite = grid.Tiles[j][i].occupant
+				}
+			}
+		}
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			if !grid.ClickMap["clickTile"] {
 				for j := 0; j < grid.SizeY; j++ {
