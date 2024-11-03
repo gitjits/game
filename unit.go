@@ -21,7 +21,15 @@ type Unit struct {
 	Present bool
 }
 
-var UNIT_PHONOMANCER Unit = Unit{Name: "Phonomancer", MoveRange: 3, HP: 5, Offense: 6, Defense: 2, Present: true}
+var UNIT_PHONOMANCER Unit = Unit{Name: "Phonomancer", MoveRange: 2, HP: 4, Offense: 6, Defense: 2, Present: true}
+var UNIT_NEWTHANDS Unit = Unit{Name: "Newt-Hands", MoveRange: 3, HP: 5, Offense: 3, Defense: 2, Present: true}
+var UNIT_LBJ Unit = Unit{Name: "Lyndon B. Johnson", MoveRange: 2, HP: 8, Offense: 3, Defense: 6, Present: true}
+
+func randomPopulate(grid *TileGrid) {
+	grid.Tiles[0][1].occupant = UNIT_LBJ
+	grid.Tiles[2][2].occupant = UNIT_PHONOMANCER
+	grid.Tiles[1][3].occupant = UNIT_NEWTHANDS
+}
 
 func (self *Unit) attackEnemy(opp *Unit) {
 	var fucked_level int = self.Offense - (opp.Defense + opp.DefenseBonus)

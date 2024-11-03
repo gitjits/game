@@ -16,12 +16,18 @@ import (
 var hexagonPng []byte
 var hexagonImg *ebiten.Image
 
+//go:embed lbj.png
+var LBJPNG []byte
+var LBJ_Img *ebiten.Image
+
 func loadEmbeddedImage() (err error) {
 	hi, _, err := image.Decode(bytes.NewReader(hexagonPng))
+	lbj_img, _, err := image.Decode(bytes.NewReader(LBJPNG))
 	if err != nil {
 		return err
 	}
 	hexagonImg = ebiten.NewImageFromImage(hi)
+	LBJ_Img = ebiten.NewImageFromImage(lbj_img)
 	return nil
 }
 
@@ -127,8 +133,8 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 340
 		g.selected.Update(g)
-        r := tileRadius(g.selected)
-        vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
+		r := tileRadius(g.selected)
+		vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
 		if g.selected != nil {
 			drawGrid(*g.selected, screen)
 		}
@@ -176,6 +182,12 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			}
 			cm.Scale(r, g, b, a)
 			colorm.DrawImage(screen, hexagonImg, cm, op)
+
+			unitOptions := &ebiten.DrawImageOptions{}
+			unitOptions.GeoM = op.GeoM
+			if tile.occupant.Name == UNIT_LBJ.Name {
+				screen.DrawImage(LBJ_Img, unitOptions)
+			}
 		}
 	}
 	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)

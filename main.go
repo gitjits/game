@@ -60,6 +60,7 @@ func (g *Game) init() {
 	gitCommitGrid(g, g.grid, false)
 	g.selected = &g.grid
 	g.selected.IsSelectedGrid = true
+	randomPopulate(g.selected)
 	//commitTestData(g)
 
 	// We need a simplified commit tree to efficiently render it
