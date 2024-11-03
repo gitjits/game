@@ -31,6 +31,7 @@ type TileGrid struct {
 	BoundsY        int
 	Color          color.RGBA
 	IsSelectedGrid bool
+    ClickMap       map[string]bool
 
 	// 2 positions can be selected
 	selectedCells [2]vec2i
@@ -61,10 +62,9 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
-	if g.selected != nil {
-		fmt.Println(g.selected.Color)
-		g.selected.X = screenWidth/2 - 150
-		g.selected.Y = screenHeight/2 - 150
+    if g.selected != nil {
+		g.selected.X = screenWidth / 2 - 150
+		g.selected.Y = screenHeight / 2 - 150
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 310
 		g.selected.Update(g)
@@ -118,6 +118,7 @@ func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, de
 		BoundsX: BoundsX,
 		BoundsY: BoundsY,
 		Color:   defaultColor,
+        ClickMap: make(map[string]bool),
 	}
 	grid.Tiles = make([][]*Tile, grid.SizeX)
 	for i := range grid.Tiles {
@@ -168,19 +169,26 @@ func (grid *TileGrid) Update(g *Game) {
 			g.selected = nil
 			fmt.Println("KILLED")
 		}
-		for j := 0; j < grid.SizeY; j++ {
-			for i := 0; i < grid.SizeX; i++ {
-				X, Y := tileScreenPos(grid, i, j)
-				r := tileRadius(grid)
-				if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-					mx, my := ebiten.CursorPosition()
-					if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-						grid.Tiles[j][i].Selected = true
-						grid.addSelection(vec2i{x: j, y: i})
-					}
-				}
-			}
-		}
+        if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+            if !grid.ClickMap["clickTile"] {
+                for j := 0; j < grid.SizeY; j++ {
+                    for i := 0; i < grid.SizeX; i++ {
+                        X, Y := tileScreenPos(grid, i, j)
+                        r := tileRadius(grid)
+                        mx, my := ebiten.CursorPosition()
+                        if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+                            grid.Tiles[j][i].Selected = true
+                        }
+                    }
+                }
+                grid.ClickMap["clickTile"] = true
+                g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
+                g.logger.AddMessage("", "[main d34db33f] select a piece", true)
+                g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
+            }
+        } else {
+            grid.ClickMap["clickTile"] = false
+        }
 
 		if grid.selectedCells[1].valid {
 			// User wants to make a move!

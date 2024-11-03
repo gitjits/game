@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"strings"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,6 +14,8 @@ import (
 
 type LogMessage struct {
     Text      string
+    Prompt string
+    Done bool
     Timestamp time.Time
 }
 
@@ -22,6 +25,8 @@ type LogWindow struct {
     lineHeight  float64
     font        font.Face
     fadeHeight  float64
+    status      int
+    prompt string
 }
 
 func NewLogWindow() *LogWindow {
@@ -31,16 +36,22 @@ func NewLogWindow() *LogWindow {
         lineHeight: 20,
         font:       inconsolata.Regular8x16,
         fadeHeight: 50,
+        status: 0,
     }
 }
 
-func (l *LogWindow) AddMessage(msg string) {
+func (l *LogWindow) AddMessage(prompt, msg string, instant bool) {
     l.messages = append(l.messages, LogMessage{
         Text:      msg,
+        Prompt: prompt,
+        Done: false,
         Timestamp: time.Now(),
     })
     if len(l.messages) > l.maxMessages {
         l.messages = l.messages[1:]
+    }
+    if instant {
+        l.status = 0
     }
 }
 
@@ -64,6 +75,8 @@ func (l *LogWindow) Draw(screen *ebiten.Image) {
         startIdx = len(l.messages) - visibleLines
     }
 
+    l.status += 1
+    ch := 0
     for i, msg := range l.messages[startIdx:] {
         yPos := sy + float64(i)*l.lineHeight
         alpha := uint8(255)
@@ -71,6 +84,21 @@ func (l *LogWindow) Draw(screen *ebiten.Image) {
             alpha = uint8((yPos - sy) / l.fadeHeight * 255)
         }
         col := color.RGBA{0, 255, 50, alpha}
-        text.Draw(screen, msg.Text, l.font, int(sx)+15, int(yPos)+15, col)
+        cum := msg.Prompt
+        for _, char := range strings.Split(msg.Text, "") {
+            if !msg.Done {
+                ch += 1
+            }
+            cum += char
+            if ch > l.status && !msg.Done {
+                break
+            }
+            text.Draw(screen, cum, l.font, int(sx)+15, int(yPos)+15, col)
+        }
+        if i == len(l.messages[startIdx:]) - 1 && len(cum) >= len(msg.Prompt) + len(msg.Text) {
+            for xx, _ := range l.messages {
+                l.messages[xx].Done = true
+            }
+        }
     }
 }
