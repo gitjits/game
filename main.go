@@ -33,9 +33,10 @@ type Game struct {
 	RPressedLastFrame   bool
 	ESCPressedLastFrame bool
 
-	infoSprite Unit
-	hidden     bool
-    stop bool
+	infoSprite    Unit
+	hidden        bool
+	stop          bool
+	botWaitPeriod int
 }
 
 func (g *Game) init() {
@@ -43,6 +44,7 @@ func (g *Game) init() {
 		g.inited = true
 	}()
 	g.scrollX = 50
+	g.botWaitPeriod = -1
 
 	err := loadEmbeddedImage()
 	if err != nil {
@@ -99,12 +101,20 @@ func (g *Game) init() {
 }
 
 func (g *Game) Update() error {
-    if g.stop {
-        return nil
-    }
+	if g.stop {
+		return nil
+	}
 	if !g.inited {
 		g.init()
 	}
+	if g.botWaitPeriod == 0 {
+		// Make bot move
+		g.selected.makeBotMove(g)
+		g.botWaitPeriod = -1
+	} else {
+		g.botWaitPeriod--
+	}
+
 	CPressedNow := ebiten.IsKeyPressed(ebiten.KeyC)
 	if CPressedNow && !g.CPressedLastFrame {
 		newGrid := g.gridTree.grid.Clone()

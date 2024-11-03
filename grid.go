@@ -164,6 +164,29 @@ func (grid *TileGrid) applyMove(g *Game) {
 
 	// The move is over, selection vanishes no matter what
 	grid.clearSelection()
+	g.botWaitPeriod = 100
+}
+
+func (grid *TileGrid) makeBotMove(g *Game) {
+	for j := 0; j < len(grid.Tiles); j++ {
+		for i := 0; i < len(grid.Tiles[j]); i++ {
+			var tile *Tile = grid.Tiles[j][i]
+
+			// Skip empty tiles
+			if !tile.occupant.Present {
+				continue
+			}
+
+			if tile.occupant.BotUnit {
+				g.selected.selectedCells[0] = vec2i{x: j, y: i, valid: true}
+			} else {
+				g.selected.selectedCells[1] = vec2i{x: j, y: i, valid: true}
+			}
+
+		}
+	}
+	g.logger.AddMessage("[!]", "The enemy has committed an act of war!", false)
+	grid.applyMove(g)
 }
 
 func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offsetX int) {
