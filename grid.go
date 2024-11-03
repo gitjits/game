@@ -10,13 +10,8 @@ import (
 )
 
 type Tile struct {
-	Width    int
-	Height   int
-	X        int
-	Y        int
 	Selected bool
 	Color    color.RGBA
-	Radius   int
 }
 
 type TileGrid struct {
@@ -31,33 +26,41 @@ type TileGrid struct {
 }
 
 func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
-    tree := startTree
-    offsetX := 0
-    for tree != nil {
-        if tree.branch != nil {
-            //drawGridTree(tree, screen, offsetY + 60)
-        }
-	//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
-        tree.grid.X = offsetX
-        tree.grid.Y = offsetY
-        tree.grid.BoundsX = 50
-        tree.grid.BoundsY = 50
-        tree.grid.Update()
-        drawGrid(tree.grid, screen)
-        //fmt.Println("Drawing", tree.grid)
-        fmt.Println(tree.grid)
-        tree = tree.next
-        offsetX += 60
-    }
+	tree := startTree
+	offsetX := 0
+	for tree != nil {
+		if tree.branch != nil {
+			//drawGridTree(tree, screen, offsetY + 60)
+		}
+		//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+		tree.grid.X = offsetX
+		tree.grid.Y = offsetY
+		tree.grid.BoundsX = 50
+		tree.grid.BoundsY = 50
+		tree.grid.Update()
+		drawGrid(tree.grid, screen)
+		//fmt.Println("Drawing", tree.grid)
+		fmt.Println(tree.grid)
+		tree = tree.next
+		offsetX += 60
+	}
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
+	r := grid.BoundsX / grid.SizeX / 2
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
-				drawPolygon(6, tile.X+grid.X, tile.Y+grid.Y, tile.Radius, tile.Color, screen)
-                fmt.Println(6, tile.X+grid.X, tile.Y+grid.Y, tile.Radius, tile.Color)
+				w, h := r*2, r*2
+				ymult := 1.0
+				if i%2 != 0 {
+					ymult = 2
+				}
+				var Xpos = grid.X + w*i + r
+				var Ypos = grid.Y + h*j + int(math.Floor(float64(r)*ymult))
+				drawPolygon(6, Xpos, Ypos, r, tile.Color, screen)
+				fmt.Println(6, Xpos, Ypos, r, tile.Color)
 			}
 		}
 	}
@@ -100,12 +103,8 @@ func (grid *TileGrid) Update() {
 			if i%2 != 0 {
 				ymult = 2
 			}
+
 			X, Y := grid.X+w*i+r, grid.Y+h*j+int(math.Floor(float64(r)*ymult))
-			grid.Tiles[j][i].Width = w
-			grid.Tiles[j][i].Height = h
-			grid.Tiles[j][i].X = X
-			grid.Tiles[j][i].Y = Y
-			grid.Tiles[j][i].Radius = r
 			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 				mx, my := ebiten.CursorPosition()
 				if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
