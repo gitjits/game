@@ -20,16 +20,18 @@ const (
 
 type Game struct {
 	selectedGrid TileGrid
-    gridTree GridTree
+	gridTree     GridTree
+	grid         TileGrid
+	gridTree     GridTree
 
 	// Backing git repo to track grid changes
-	backingFS billy.Filesystem
-	repo      *git.Repository
+	backingFS  billy.Filesystem
+	repo       *git.Repository
+	cur_branch string
 
 	// Meta stuff
 	op     ebiten.DrawImageOptions
 	inited bool
-    fuckyou bool
 }
 
 func (g *Game) init() {
@@ -39,8 +41,9 @@ func (g *Game) init() {
 
 	//g.selectedGrid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	gitSetup(g)
-    g.gridTree = iterCommits(g)
-    //fmt.Println(g.gridTree)
+	g.cur_branch = "master"
+	g.gridTree = iterCommits(g)
+	//fmt.Println(g.gridTree)
 
 	fmt.Print("Setup Git repo!\n")
 }
@@ -55,7 +58,7 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-    drawGridTree(&g.gridTree, screen, 50)
+	drawGridTree(&g.gridTree, screen, 50)
 	//drawGrid(g.grid, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,

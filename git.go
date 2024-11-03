@@ -17,17 +17,15 @@ const (
 	gridFileName = "gridfile"
 )
 
-func ListBranches(r *git.Repository) ([]string, error) {
-	branches := []string{}
-	refs, err := r.References()
+func ListBranches(r *git.Repository) ([]plumbing.Hash, error) {
+	branches := []plumbing.Hash{}
+	refs, err := r.Branches()
 	if err != nil {
 		return nil, err
 	}
 
 	refs.ForEach(func(ref *plumbing.Reference) error {
-		if ref.Name().IsBranch() {
-			branches = append(branches, ref.Name().Short())
-		}
+		branches = append(branches, ref.Hash())
 		return nil
 	})
 
@@ -47,8 +45,8 @@ func CreateBranch(r *git.Repository, branchName string) error {
 	return nil
 }
 
-func CheckoutBranch(r *git.Repository, branchName string) error {
-	w, err := r.Worktree()
+func CheckoutBranch(g *Game, branchName string) error {
+	w, err := g.repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("failed to get worktree: %w", err)
 	}
@@ -99,7 +97,7 @@ func gitSetup(g *Game) bool {
 	file.Write(bytes)
 	file.Close()
 
-	err = createTestData(g.repo)
+	err = createTestData(g)
 	if err != nil {
 		fmt.Printf("Error creating test data: %v\n", err)
 		return false
@@ -116,12 +114,12 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 	if err != nil {
 		return grid, err
 	}
-    defer file.Close()
+	defer file.Close()
 
-    data, err := io.ReadAll(file)
-    if err != nil {
-        return grid, err
-    }
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return grid, err
+	}
 
 	err = bson.Unmarshal(data, &grid)
 
@@ -129,55 +127,60 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 }
 
 func iterCommits(g *Game) GridTree {
-    var head *GridTree // Keep track of the head of our list
+	var head *GridTree // Keep track of the head of our list
 
-    commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
-    if err != nil {
-        fmt.Print("Error getting log iterator: ", err, "\n")
-        return GridTree{}
-    }
+	worktree, err := g.repo.Worktree()
+	worktree.Checkout(&git.CheckoutOptions{})
+	if err != nil {
+		fmt.Print("Error getting current worktree!", err, "\n")
+		return GridTree{}
+	}
 
-    worktree, err := g.repo.Worktree()
-    if err != nil {
-        fmt.Print("Error getting current worktree!", err, "\n")
-        return GridTree{}
-    }
+	branches, err := ListBranches(g.repo)
+	if err != nil {
+		return *head
+	}
+	for _, branch := range branches {
+		commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime, From: branch})
+		if err != nil {
+			fmt.Print("Error getting log iterator: ", err, "\n")
+			return GridTree{}
+		}
 
-    initialHash := plumbing.Hash{}
-    emptyHash := plumbing.Hash{}
+		commits.ForEach(func(commit *object.Commit) error {
+			worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
 
-    commits.ForEach(func(commit *object.Commit) error {
-        if initialHash == emptyHash {
-            initialHash = commit.Hash
-        }
+			newNode := &GridTree{}
 
-        worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
+			grid, err := gitCurrentGrid(g)
+			if err != nil {
+				fmt.Println("Error on commit2", err)
+				return err
+			}
+			newNode.grid = grid
 
-        newNode := &GridTree{}
+			// Link the new node properly
+			if head != nil {
+				newNode.next = head
+				head.parent = newNode
+			}
+			head = newNode
 
-        grid, err := gitCurrentGrid(g)
-        if err != nil {
-            fmt.Println("Error on commit2", err)
-            return err
-        }
-        newNode.grid = grid
+			return nil
+		})
+	}
 
-        // Link the new node properly
-        if head != nil {
-            newNode.next = head
-            head.parent = newNode
-        }
-        head = newNode
-
-        return nil
-    })
-
-    worktree.Checkout(&git.CheckoutOptions{Hash: initialHash})
-    return *head
+	branchref, err := g.repo.Branch(g.cur_branch)
+	if err != nil {
+		fmt.Printf("Couldn't find current branch [error \"%v\"]\n", err)
+		return *head
+	}
+	worktree.Checkout(&git.CheckoutOptions{Branch: branchref.Merge, Keep: true})
+	return *head
 }
 
-func createTestData(repo *git.Repository) error {
-	w, err := repo.Worktree()
+func createTestData(g *Game) error {
+	w, err := g.repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("failed to get worktree: %w", err)
 	}
@@ -188,14 +191,14 @@ func createTestData(repo *git.Repository) error {
 		if err != nil {
 			return plumbing.ZeroHash, err
 		}
-        bytes, err := bson.Marshal(grid)
-        if err != nil {
-            fmt.Printf("Serialization error: %v\n", err)
-            return plumbing.ZeroHash, err
-        }
+		bytes, err := bson.Marshal(grid)
+		if err != nil {
+			fmt.Printf("Serialization error: %v\n", err)
+			return plumbing.ZeroHash, err
+		}
 
-        file.Write(bytes)
-        file.Close()
+		file.Write(bytes)
+		file.Close()
 
 		_, err = w.Add(gridFileName)
 		if err != nil {
@@ -207,62 +210,62 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create initial commit on main
-    _, err = createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
+	_, err = createCommit("Initial commit on main", createGrid(4, 4, 5, 5, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}))
 	fmt.Print("Created a commit\n")
 	if err != nil {
 		return err
 	}
 
 	// Create feature1 branch from initial commit
-	err = CreateBranch(repo, "feature1")
+	err = CreateBranch(g.repo, "feature1")
 	if err != nil {
 		return err
 	}
-	if err := CheckoutBranch(repo, "feature1"); err != nil {
+	if err := CheckoutBranch(g, "feature1"); err != nil {
 		return err
 	}
 
 	// Add commits to feature1
-    _, err = createCommit("first com mit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}))
+	_, err = createCommit("first com mit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}))
 	if err != nil {
 		return err
 	}
-    _, err = createCommit("Second commit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}))
+	_, err = createCommit("Second commit on feature1", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
 
 	// Back to main
-	if err := CheckoutBranch(repo, "master"); err != nil {
+	if err := CheckoutBranch(g, "master"); err != nil {
 		return err
 	}
 
 	// Add more commits to main
-    _, err = createCommit("Second commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 255, G: 255, A: 1}))
+	_, err = createCommit("Second commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 0, B: 255, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
 
 	// Create feature2 from current main
-	err = CreateBranch(repo, "feature2")
+	err = CreateBranch(g.repo, "feature2")
 	if err != nil {
 		return err
 	}
-	if err := CheckoutBranch(repo, "feature2"); err != nil {
+	if err := CheckoutBranch(g, "feature2"); err != nil {
 		return err
 	}
 
 	// Add commit to feature2
-    _, err = createCommit("First commit on feature2", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}))
+	_, err = createCommit("First commit on feature2", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 0, G: 255, A: 1}))
 	if err != nil {
 		return err
 	}
 
 	// Back to main for final commit
-	if err := CheckoutBranch(repo, "master"); err != nil {
+	if err := CheckoutBranch(g, "master"); err != nil {
 		return err
 	}
-    _, err = createCommit("Third commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 255, G: 0, A: 1}))
+	_, err = createCommit("Third commit on main", createGrid(4, 4, 4, 4, 4, 4, color.RGBA{R: 255, B: 255, G: 0, A: 1}))
 	if err != nil {
 		return err
 	}
