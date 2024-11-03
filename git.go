@@ -19,13 +19,16 @@ const (
 
 func ListBranches(r *git.Repository) ([]plumbing.Hash, error) {
 	branches := []plumbing.Hash{}
-	refs, err := r.Branches()
+	refs, err := r.References()
 	if err != nil {
 		return nil, err
 	}
 
 	refs.ForEach(func(ref *plumbing.Reference) error {
-		branches = append(branches, ref.Hash())
+        if !ref.Name().IsBranch() {
+            return nil
+        }
+        branches = append(branches, ref.Hash())
 		return nil
 	})
 
@@ -53,7 +56,7 @@ func CheckoutBranch(g *Game, branchName string) error {
 
 	opts := &git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName(branchName),
-		Force:  false,
+		Force:  true,
 	}
 
 	if err := w.Checkout(opts); err != nil {
@@ -70,15 +73,14 @@ type GridTree struct {
 	branch *GridTree
 }
 
-func gitSetup(g *Game) bool {
+func gitSetup(g *Game) error {
 	// Create in-memory filesystem
 	g.backingFS = memfs.New()
 
 	// Setup git repo with in-memory filesystem
-	repo, e := git.Init(memory.NewStorage(), g.backingFS)
-	if e != nil {
-		fmt.Printf("Error %v\n", e)
-		return false
+	repo, err := git.Init(memory.NewStorage(), g.backingFS)
+	if err != nil {
+		return err
 	}
 	g.repo = repo
 
@@ -86,25 +88,35 @@ func gitSetup(g *Game) bool {
 	file, err := g.backingFS.Create(gridFileName)
 	if err != nil {
 		fmt.Printf("Error creating file: %v\n", err)
-		return false
+		return err
 	}
 	bytes, err := bson.Marshal(g.selectedGrid)
 	if err != nil {
 		fmt.Printf("Serialization error: %v\n", err)
-		return false
+		return err
 	}
 
 	file.Write(bytes)
 	file.Close()
 
+	w, err := g.repo.Worktree()
+	if err != nil {
+		fmt.Print("Error getting current worktree!", err, "\n")
+		return err
+	}
+    _, err = w.Add(gridFileName)
+    if err != nil {
+        return err
+    }
+
 	err = createTestData(g)
 	if err != nil {
 		fmt.Printf("Error creating test data: %v\n", err)
-		return false
+		return err
 	}
 	fmt.Printf("Initialized git repo and state file \"%s\"\n", gridFileName)
 
-	return true
+	return nil
 }
 
 func gitCurrentGrid(g *Game) (TileGrid, error) {
@@ -170,12 +182,6 @@ func buildCommitTree(g *Game) (*GridTree, error) {
 		})
 	}
 
-	branchref, err := g.repo.Branch(g.cur_branch)
-	if err != nil {
-		fmt.Printf("Couldn't find current branch [error \"%v\"]\n", err)
-		return head, err
-	}
-	worktree.Checkout(&git.CheckoutOptions{Branch: branchref.Merge, Keep: true})
 	return head, err
 }
 
@@ -207,11 +213,6 @@ func createTestData(g *Game) error {
 
 		hash, err := w.Commit(message, &git.CommitOptions{})
 		return hash, err
-	}
-
-	err = CreateBranch(g.repo, "master")
-	if err != nil {
-		return err
 	}
 
 	// Create initial commit on main

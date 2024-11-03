@@ -34,6 +34,10 @@ func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
 		if tree.branch != nil {
 			//drawGridTree(tree, screen, offsetY + 60)
 		}
+        if tree.grid.SizeX == 0 {
+            fmt.Println("GRID IS NIL", tree.grid)
+            return
+        }
         if !tree.grid.IsSelectedGrid {
             tree.grid.X = offsetX
             tree.grid.Y = offsetY

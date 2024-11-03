@@ -39,9 +39,11 @@ func (g *Game) init() {
 	}()
 
 	//g.selectedGrid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
-	gitSetup(g)
+    err := gitSetup(g)
+    if err != nil {
+        panic(err)
+    }
 	g.cur_branch = "master"
-    var err error
 	g.gridTree, err = buildCommitTree(g)
     if err != nil {
         panic(err)
