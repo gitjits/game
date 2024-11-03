@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
 type Tile struct {
@@ -28,7 +29,7 @@ type TileGrid struct {
 
 func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
 	tree := startTree
-	offsetX := 0
+	offsetX := 50
 	for tree != nil {
 		if tree.branch != nil {
 			//drawGridTree(tree, screen, offsetY + 60)
@@ -56,16 +57,17 @@ func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
 }
 
 func drawGrid(grid TileGrid, screen *ebiten.Image) {
+    r := tileRadius(&grid)
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
 				Xpos, Ypos := tileScreenPos(&grid, i, j)
-				r := tileRadius(&grid)
 				drawPolygon(6, Xpos, Ypos, r, tile.Color, screen)
 			}
 		}
 	}
+    vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
 }
 
 func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, defaultColor color.RGBA) TileGrid {
