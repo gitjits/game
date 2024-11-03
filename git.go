@@ -25,6 +25,10 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 		next:       nil,
 		generation: old.generation,
 	}
+    if branch && node.generation == 4 {
+        g.logger.AddMessage("[!] ", "Maximum allowed branches", false)
+        return ""
+    }
 	if branch {
 		node.generation++
 	}
