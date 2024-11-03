@@ -65,6 +65,17 @@ func (grid *TileGrid) addSelection(coord vec2i) {
 	}
 }
 
+func (grid *TileGrid) posSelected(coord vec2i) bool {
+	cells := grid.selectedCells
+	if cells[0].valid && cells[0].x == coord.x && cells[0].y == coord.y {
+		return true
+	}
+	if cells[1].valid && cells[1].x == coord.x && cells[1].y == coord.y {
+		return true
+	}
+	return false
+}
+
 func (grid *TileGrid) clearSelection() {
 	grid.selectedCells[0] = vec2i{}
 	grid.selectedCells[1] = vec2i{}
@@ -148,19 +159,21 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
-			if !tile.Selected {
-				Xpos, Ypos := tileScreenPos(&grid, i, j)
-				op := &colorm.DrawImageOptions{}
-				scale := float64(float64(r) * 2.0 / 256.0)
-				op.GeoM.Scale(1.25*scale, scale*1.05)
-				op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
-				var cm colorm.ColorM
-				r := float64(tile.Color.R) / 0xff
-				g := float64(tile.Color.G) / 0xff
-				b := float64(tile.Color.B) / 0xff
-				cm.Scale(r, g, b, 1)
-				colorm.DrawImage(screen, hexagonImg, cm, op)
+			Xpos, Ypos := tileScreenPos(&grid, i, j)
+			op := &colorm.DrawImageOptions{}
+			scale := float64(float64(r) * 2.0 / 256.0)
+			op.GeoM.Scale(1.25*scale, scale*1.05)
+			op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
+			var cm colorm.ColorM
+			r := float64(tile.Color.R) / 0xff
+			g := float64(tile.Color.G) / 0xff
+			b := float64(tile.Color.B) / 0xff
+			a := 1.0
+			if grid.posSelected(vec2i{x: j, y: i}) {
+				a = 0.25
 			}
+			cm.Scale(r, g, b, a)
+			colorm.DrawImage(screen, hexagonImg, cm, op)
 		}
 	}
 	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
