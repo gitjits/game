@@ -21,7 +21,7 @@ const (
 type Game struct {
 	selectedGrid TileGrid
 	grid         TileGrid
-	gridTree     GridTree
+	gridTree     *GridTree
 
 	// Backing git repo to track grid changes
 	backingFS  billy.Filesystem
@@ -61,7 +61,7 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGridTree(&g.gridTree, screen, 50)
+	drawGridTree(g.gridTree, screen, 50)
 	//drawGrid(g.grid, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,

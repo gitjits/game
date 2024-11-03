@@ -126,25 +126,25 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 	return grid, err
 }
 
-func buildCommitTree(g *Game) (GridTree, error) {
+func buildCommitTree(g *Game) (*GridTree, error) {
 	var head *GridTree // Keep track of the head of our list
 
 	worktree, err := g.repo.Worktree()
 	worktree.Checkout(&git.CheckoutOptions{})
 	if err != nil {
 		fmt.Print("Error getting current worktree!", err, "\n")
-		return GridTree{}, err
+		return &GridTree{}, err
 	}
 
 	branches, err := ListBranches(g.repo)
 	if err != nil {
-		return *head, err
+		return head, err
 	}
 	for _, branch := range branches {
 		commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime, From: branch})
 		if err != nil {
 			fmt.Print("Error getting log iterator: ", err, "\n")
-			return GridTree{}, err
+			return &GridTree{}, err
 		}
 
 		commits.ForEach(func(commit *object.Commit) error {
@@ -173,10 +173,10 @@ func buildCommitTree(g *Game) (GridTree, error) {
 	branchref, err := g.repo.Branch(g.cur_branch)
 	if err != nil {
 		fmt.Printf("Couldn't find current branch [error \"%v\"]\n", err)
-		return *head, err
+		return head, err
 	}
 	worktree.Checkout(&git.CheckoutOptions{Branch: branchref.Merge, Keep: true})
-	return *head, err
+	return head, err
 }
 
 func createTestData(g *Game) error {
@@ -207,6 +207,11 @@ func createTestData(g *Game) error {
 
 		hash, err := w.Commit(message, &git.CommitOptions{})
 		return hash, err
+	}
+
+	err = CreateBranch(g.repo, "master")
+	if err != nil {
+		return err
 	}
 
 	// Create initial commit on main
