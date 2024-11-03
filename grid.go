@@ -136,13 +136,14 @@ func (grid *TileGrid) applyMove(g *Game) {
 	// User wants to make a move!
 	pos1 := grid.selectedCells[0]
 	pos2 := grid.selectedCells[1]
-	if pos1.x == pos2.x && pos1.y == pos2.y {
+	source := grid.Tiles[pos1.x][pos1.y]
+	target := grid.Tiles[pos2.x][pos2.y]
+
+	if pos1.x == pos2.x && pos1.y == pos2.y || !source.occupant.Present {
 		// Source is the same as target, cancel the move
 		grid.clearSelection()
 		return
 	}
-	source := grid.Tiles[pos1.x][pos1.y]
-	target := grid.Tiles[pos2.x][pos2.y]
 
 	if !source.occupant.Present {
 		// No one's here, they can just move.
@@ -210,9 +211,9 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 
 func drawGrid(grid TileGrid, screen *ebiten.Image, g *Game) {
 	r := tileRadius(&grid)
-    p1Dead := true
-    p2Dead := true
-    cil := false
+	p1Dead := true
+	p2Dead := true
+	cil := false
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
@@ -256,40 +257,40 @@ func drawGrid(grid TileGrid, screen *ebiten.Image, g *Game) {
 			unitOptions.Filter = ebiten.FilterNearest
 			if tile.occupant.Name == UNIT_LBJ.Name {
 				screen.DrawImage(LBJ_Img, unitOptions)
-                p1Dead = false
-                cil = true
+				p1Dead = false
+				cil = true
 			}
 			if tile.occupant.Name == UNIT_NEWTHANDS.Name {
 				screen.DrawImage(NewtImg, unitOptions)
-                p1Dead = false
-                cil = true
+				p1Dead = false
+				cil = true
 			}
 			if tile.occupant.Name == UNIT_WIZZY.Name {
 				screen.DrawImage(WizzyImg, unitOptions)
-                p2Dead = false
-                cil = true
+				p2Dead = false
+				cil = true
 			}
 			if tile.occupant.Name == UNIT_WING_CENTIPEDE.Name {
 				screen.DrawImage(CentepedeImg, unitOptions)
-                p2Dead = false
-                cil = true
+				p2Dead = false
+				cil = true
 			}
 			if tile.occupant.Name == UNIT_PHONOMANCER.Name {
 				screen.DrawImage(PhonomancerImg, unitOptions)
-                p1Dead = false
-                cil = true
+				p1Dead = false
+				cil = true
 			}
 		}
 	}
-    if p2Dead && cil && g.gridTree.generation == 0 {
-        g.logger.AddMessage("you$ ", "git push origin main", false)
-        g.logger.AddMessage("", "You win!", false)
-        g.gridTree.generation = -3
-    } else if p1Dead && cil && g.gridTree.generation == 0 {
-        g.logger.AddMessage("you$ ", "sudo rm -rf / --no-preserve-root", false)
-        g.logger.AddMessage("", "whoops. it's over", false)
-        g.gridTree.generation = -3
-    }
+	if p2Dead && cil && g.gridTree.generation == 0 {
+		g.logger.AddMessage("you$ ", "git push origin main", false)
+		g.logger.AddMessage("", "You win!", false)
+		g.gridTree.generation = -3
+	} else if p1Dead && cil && g.gridTree.generation == 0 {
+		g.logger.AddMessage("you$ ", "sudo rm -rf / --no-preserve-root", false)
+		g.logger.AddMessage("", "whoops. it's over", false)
+		g.gridTree.generation = -3
+	}
 	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
 }
 
