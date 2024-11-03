@@ -13,14 +13,15 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const (
-	screenWidth  = 500
-	screenHeight = 500
+var (
+	screenWidth  = 1000
+	screenHeight = 700
 )
 
 type Game struct {
 	grid     TileGrid
 	gridTree GridTree
+    selected bool
 
 	// Backing git repo to track grid changes
 	backingFS  billy.Filesystem
@@ -30,6 +31,8 @@ type Game struct {
 	// Meta stuff
 	op     ebiten.DrawImageOptions
 	inited bool
+
+    logger *LogWindow
 }
 
 func (g *Game) init() {
@@ -38,6 +41,8 @@ func (g *Game) init() {
 	}()
 
 	g.gridTree = GridTree{}
+
+    g.logger = NewLogWindow()
 
 	// Create basic test data in the repo
 	g.grid = createGrid(0, 0, 5, 5, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
@@ -51,7 +56,22 @@ func (g *Game) init() {
 		tree = *tree.prev
 	}
 
-	fmt.Print("Setup fake Git repo!\n")
+	// We need a simplified commit tree to efficiently render it
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+    g.logger.AddMessage("ena")
+
+	fmt.Print("Setup Git repo!\n")
 }
 
 func (g *Game) Update() error {
@@ -64,7 +84,9 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x33, 0x4C, 0x4C, 0xFF})
-	drawGridTree(&g.gridTree, screen)
+	drawGridTree(g, &g.gridTree, screen, 50, 50)
+    g.logger.Draw(screen)
+	//drawGrid(g.grid, screen)
 	// Draw each sprite.
 	// DrawImage can be called many many times, but in the implementation,
 	// the actual draw call to GPU is very few since these calls satisfy
@@ -81,7 +103,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	ebiten.SetWindowSize(screenWidth*2, screenHeight*2)
 	ebiten.SetWindowTitle("Sprites (Ebitengine Demo)")
-	//ebiten.SetWindowResizable(true)
+    ebiten.SetWindowResizable(true)
 	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
