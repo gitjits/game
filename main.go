@@ -16,6 +16,7 @@ var (
 )
 
 type Game struct {
+	grid     TileGrid
 	gridTree GridTree
 	selected *TileGrid
 
@@ -27,6 +28,7 @@ type Game struct {
 	scrollX           int
 	autoScroll        bool
 	CPressedLastFrame bool
+	BPressedLastFrame bool
 }
 
 func (g *Game) init() {
@@ -45,15 +47,17 @@ func (g *Game) init() {
 	g.logger = NewLogWindow()
 
 	// Create basic test data in the repo
-	grid := createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
-	gitCommitGrid(g, grid, false)
-	g.selected = &grid
+	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
+	g.grid.Update(g)
+	gitCommitGrid(g, g.grid, false)
+	g.selected = &g.grid
 	g.selected.IsSelectedGrid = true
 
-	grid2 := createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
-	grid2.Tiles[0][3].Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
-	gitCommitGrid(g, grid2, false)
-	g.selected = &grid2
+	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
+	g.grid.Tiles[0][3].Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
+	g.grid.Update(g)
+	gitCommitGrid(g, g.grid, false)
+	g.selected = &g.grid
 	g.selected.IsSelectedGrid = true
 	//commitTestData(g)
 
@@ -84,10 +88,14 @@ func (g *Game) Update() error {
 	if CPressedNow && !g.CPressedLastFrame {
 		newGrid := g.gridTree.grid.Clone()
 		gitCommitGrid(g, newGrid, false)
-		g.selected = &g.gridTree.grid
-		g.selected.IsSelectedGrid = true
 	}
 	g.CPressedLastFrame = CPressedNow
+	BPressedNow := ebiten.IsKeyPressed(ebiten.KeyB)
+	if BPressedNow && !g.BPressedLastFrame {
+		newGrid := g.gridTree.grid.Clone()
+		gitCommitGrid(g, newGrid, true)
+	}
+	g.BPressedLastFrame = BPressedNow
 
 	return nil
 }
