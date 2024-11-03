@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"fmt"
 	"image/color"
 	"math"
@@ -13,6 +12,13 @@ import (
 type Tile struct {
 	Selected bool
 	Color    color.RGBA
+	occupant Unit
+}
+
+type vec2i struct {
+	x     int
+	y     int
+	valid bool // This is only set on once the position is initialized
 }
 
 type TileGrid struct {
@@ -25,6 +31,26 @@ type TileGrid struct {
 	BoundsY        int
 	Color          color.RGBA
 	IsSelectedGrid bool
+
+	// 2 positions can be selected
+	selectedCells [2]vec2i
+}
+
+func (grid *TileGrid) addSelection(coord vec2i) {
+	coord.valid = true
+	if !grid.selectedCells[0].valid {
+		grid.selectedCells[0] = coord
+	} else if !grid.selectedCells[1].valid {
+		grid.selectedCells[1] = coord
+	} else {
+		// We could "rotate" the selections around, but in the context of the
+		// game it doesn't really make sense. We'll just ignore it.
+	}
+}
+
+func (grid *TileGrid) clearSelection() {
+	grid.selectedCells[0] = vec2i{}
+	grid.selectedCells[1] = vec2i{}
 }
 
 func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offsetX int) {
@@ -35,22 +61,22 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	// Handle selected grid
-    if g.selected != nil {
-        fmt.Println(g.selected.Color)
-		g.selected.X = screenWidth / 2 - 150
-		g.selected.Y = screenHeight / 2 - 150
+	if g.selected != nil {
+		fmt.Println(g.selected.Color)
+		g.selected.X = screenWidth/2 - 150
+		g.selected.Y = screenHeight/2 - 150
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 310
-        g.selected.Update(g)
-        if g.selected != nil {
-            drawGrid(*g.selected, screen)
-        }
-    }
+		g.selected.Update(g)
+		if g.selected != nil {
+			drawGrid(*g.selected, screen)
+		}
+	}
 	if tree.grid.IsSelectedGrid {
 		// Draw main selected grid in center
 
 		// Draw small version in tree
-		faux := createGrid(offsetX, offsetY + tree.generation*120, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
+		faux := createGrid(offsetX, offsetY+tree.generation*120, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
 		faux.Tiles = tree.grid.Tiles
 		drawGrid(faux, screen)
 	} else {
@@ -100,17 +126,17 @@ func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, de
 
 	for j := 0; j < grid.SizeY; j++ {
 		for i := 0; i < grid.SizeX; i++ {
-            if i % 2 == 0 {
-                grid.Tiles[j][i] = &Tile{
-                    Color:    defaultColor,
-                    Selected: false,
-                }
-            } else {
-                grid.Tiles[j][i] = &Tile{
-                    Color:    color.RGBA{R: 255, G: 255, B: 255, A: 255},
-                    Selected: false,
-                }
-            }
+			if i%2 == 0 {
+				grid.Tiles[j][i] = &Tile{
+					Color:    defaultColor,
+					Selected: false,
+				}
+			} else {
+				grid.Tiles[j][i] = &Tile{
+					Color:    color.RGBA{R: 255, G: 255, B: 255, A: 255},
+					Selected: false,
+				}
+			}
 		}
 	}
 
@@ -139,7 +165,7 @@ func (grid *TileGrid) Update(g *Game) {
 	if grid.IsSelectedGrid {
 		if ebiten.IsKeyPressed(ebiten.KeyEscape) {
 			grid.IsSelectedGrid = false
-            g.selected = nil
+			g.selected = nil
 			fmt.Println("KILLED")
 		}
 		for j := 0; j < grid.SizeY; j++ {
@@ -150,19 +176,47 @@ func (grid *TileGrid) Update(g *Game) {
 					mx, my := ebiten.CursorPosition()
 					if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
 						grid.Tiles[j][i].Selected = true
+						grid.addSelection(vec2i{x: j, y: i})
 					}
 				}
 			}
+		}
+
+		if grid.selectedCells[1].valid {
+			// User wants to make a move!
+			pos1 := grid.selectedCells[0]
+			pos2 := grid.selectedCells[1]
+			source := grid.Tiles[pos1.x][pos1.y]
+			target := grid.Tiles[pos2.x][pos2.y]
+
+			if !source.occupant.present {
+				// No one's here, they can just move.
+				target.occupant = source.occupant
+				source.occupant = Unit{present: false}
+			} else {
+				source.occupant.attackEnemy(&target.occupant)
+				if target.occupant.hp <= 0 {
+					// Attacker won, move into the cell
+					target.occupant = source.occupant
+					source.occupant = Unit{present: false}
+				} else if source.occupant.hp <= 0 {
+					// Attacker lost, delete them
+					source.occupant = Unit{present: false}
+				}
+			}
+
+			// The move is over, selection vanishes no matter what
+			grid.clearSelection()
 		}
 	} else {
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			mx, my := ebiten.CursorPosition()
 			if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
 				grid.IsSelectedGrid = true
-                if g.selected != nil {
-                    g.selected.IsSelectedGrid = false
-                }
-                g.selected = grid
+				if g.selected != nil {
+					g.selected.IsSelectedGrid = false
+				}
+				g.selected = grid
 			}
 		}
 	}

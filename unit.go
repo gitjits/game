@@ -14,6 +14,10 @@ type Unit struct {
 
 	offense_bonus int
 	defense_bonus int
+
+	// This is my replacement for an Optional<Unit> type, when going through
+	// the grid we can do "if unit.present {".
+	present bool
 }
 
 func (self *Unit) attackEnemy(opp *Unit) {
