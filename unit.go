@@ -71,6 +71,10 @@ func reportWinner(self *Unit, opp *Unit, g *Game) {
 }
 
 func (self *Unit) attackEnemy(opp *Unit, g *Game) {
+    if self.BotUnit == opp.BotUnit {
+        g.logger.AddMessage("[!] ", fmt.Sprintf("friendly fire coming from %s!", self.Name), false)
+        return
+    }
 	defer reportWinner(self, opp, g)
 	var imbalance float64 = float64(self.Offense - (opp.Defense))
 	g.logger.AddMessage("[+] ", fmt.Sprintf("%s has a power imbalance of %f against %s", self.Name, imbalance, opp.Name), false)
