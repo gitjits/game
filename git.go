@@ -21,7 +21,7 @@ func generateRandomHash() string {
     return fmt.Sprintf("%x", b)
 }
 
-func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
+func gitCommitGrid(g *Game, grid TileGrid, branch bool, cls bool) string {
 	old := g.gridTree
 	if old.prev != nil {
 		old.prev.next = &old
@@ -34,12 +34,12 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
         commitHash: generateRandomHash(),
 	}
     if branch && node.generation == 4 {
-        g.logger.AddMessage("[!] ", "Maximum allowed branches", false)
+        g.logger.AddMessage("[!] ", "Maximum allowed branches", true)
         return ""
     }
 	if branch {
 		node.generation++
-        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout -b branch%d", node.generation), true)
+        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout -b branch%d", node.generation), false)
 	}
 	g.gridTree = node
 	old.next = &g.gridTree
@@ -47,9 +47,11 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	g.selected = &grid
 	g.selected.IsSelectedGrid = true
 
-	g.logger.AddMessage("you$ ", "git commit -m 'move a piece'", true)
-    g.logger.AddMessage("", fmt.Sprintf("[main %s] move a piece", node.commitHash[0:8]), true)
-	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
+    if !cls {
+        g.logger.AddMessage("you$ ", "git commit -m 'move a piece'", false)
+        g.logger.AddMessage("", fmt.Sprintf("[main %s] move a piece", node.commitHash[0:8]), true)
+        g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", true)
+    }
 	return  node.commitHash
 }
 
@@ -60,11 +62,11 @@ func mergeCurrentBranch(g *Game) {
         return
     }
     if g.gridTree.generation - 1 > 0 {
-        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout branch%d", g.gridTree.generation - 1), true)
+        g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout branch%d", g.gridTree.generation - 1), false)
     } else {
-        g.logger.AddMessage("you$ ", "git checkout main", true)
+        g.logger.AddMessage("you$ ", "git checkout main", false)
     }
-    g.logger.AddMessage("you$ ", "git merge " + g.gridTree.commitHash, true)
+    g.logger.AddMessage("you$ ", "git merge " + g.gridTree.commitHash, false)
     g.logger.AddMessage("", "Updating " + g.gridTree.prev.commitHash, true)
     g.logger.AddMessage("", "Fast-forward", true)
     g.logger.AddMessage("", " board.bson | 1 +", true)
@@ -106,19 +108,19 @@ func gitCurrentGrid(g *Game) TileGrid {
 
 func commitTestData(g *Game) error {
 	// Create initial commit on main
-	hash := gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}), false)
+	hash := gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 255, B: 255, G: 255, A: 1}), false, false)
 
 	fmt.Println("Created a commit on master", hash)
 
 	// Add commits to feature1
-	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}), true)
+	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 255, B: 0, G: 0, A: 1}), true, false)
 	fmt.Println("Created a commit on feature1", hash)
 
-	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}), false)
+	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 0, B: 0, G: 255, A: 1}), false, false)
 	fmt.Println("Created a commit on feature1", hash)
 
 	// Add commit to feature2
-	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 0, B: 255, G: 0, A: 1}), true)
+	hash = gitCommitGrid(g, createGrid(4, 4, 9, 9, 4, 4, color.RGBA{R: 0, B: 255, G: 0, A: 1}), true, false)
 	fmt.Println("Created a commit on feature2", hash)
 
 	return nil

@@ -27,6 +27,7 @@ type LogWindow struct {
     fadeHeight  float64
     status      int
     prompt string
+    height      float64
 }
 
 func NewLogWindow() *LogWindow {
@@ -37,6 +38,7 @@ func NewLogWindow() *LogWindow {
         font:       inconsolata.Regular8x16,
         fadeHeight: 50,
         status: 0,
+        height: 250,
     }
 }
 
@@ -56,10 +58,10 @@ func (l *LogWindow) AddMessage(prompt, msg string, instant bool) {
 }
 
 func (l *LogWindow) Draw(screen *ebiten.Image) {
-    height := float64(screenHeight/5)
+    height := l.height
     width := float64(screenWidth/2)
     sx := float64(0)
-    sy := float64(screenHeight*4/5)
+    sy := float64(screenHeight)-l.height
     for y := float64(0); y < height; y++ {
         alpha := uint8(255)
         if y < l.fadeHeight {
@@ -76,6 +78,9 @@ func (l *LogWindow) Draw(screen *ebiten.Image) {
     }
 
     l.status += 1
+    if l.status == 1000 {
+        l.height = 150
+    }
     ch := 0
     for i, msg := range l.messages[startIdx:] {
         yPos := sy + float64(i)*l.lineHeight
@@ -90,7 +95,7 @@ func (l *LogWindow) Draw(screen *ebiten.Image) {
                 ch += 1
             }
             cum += char
-            if ch > l.status && !msg.Done {
+            if ch*4 > l.status && !msg.Done {
                 break
             }
             text.Draw(screen, cum, l.font, int(sx)+15, int(yPos)+15, col)

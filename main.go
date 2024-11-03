@@ -31,6 +31,8 @@ type Game struct {
 	BPressedLastFrame bool
 	MPressedLastFrame bool
 	RPressedLastFrame bool
+
+    infoSprite Unit
 }
 
 func (g *Game) init() {
@@ -51,14 +53,14 @@ func (g *Game) init() {
 	// Create basic test data in the repo
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
 	g.grid.Update(g)
-	gitCommitGrid(g, g.grid, false)
+	gitCommitGrid(g, g.grid, false, true)
 	g.selected = &g.grid
 	g.selected.IsSelectedGrid = true
 
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
 	g.grid.Tiles[0][3].Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 	g.grid.Update(g)
-	gitCommitGrid(g, g.grid, false)
+	gitCommitGrid(g, g.grid, false, true)
 	g.selected = &g.grid
 	g.selected.IsSelectedGrid = true
 	randomPopulate(g.selected)
@@ -75,11 +77,19 @@ func (g *Game) init() {
 	g.logger.AddMessage("", "", false)
 	g.logger.AddMessage("", "", false)
 	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
+	g.logger.AddMessage("", "", false)
 	g.logger.AddMessage("ur_enemy$ ", "git init", false)
 	g.logger.AddMessage("ur_enemy$ ", "git commit -m 'welcome to the game'", false)
 	g.logger.AddMessage("", "[main e5e8386] welcome to the game", false)
 	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", false)
 	g.logger.AddMessage("", "create mode 100644 board.bson", false)
+	g.logger.AddMessage("you$ ", "git --help", false)
+    g.logger.AddMessage("[!] ", "Controls", false)
+    g.logger.AddMessage("[!] ", "c: commit", false)
+    g.logger.AddMessage("[!] ", "b: new branch", false)
+    g.logger.AddMessage("[!] ", "m: merge", false)
+    g.logger.AddMessage("[!] ", "r: revert", false)
 	fmt.Print("Setup Git repo!\n")
 }
 
@@ -90,13 +100,13 @@ func (g *Game) Update() error {
 	CPressedNow := ebiten.IsKeyPressed(ebiten.KeyC)
 	if CPressedNow && !g.CPressedLastFrame {
 		newGrid := g.gridTree.grid.Clone()
-		gitCommitGrid(g, newGrid, false)
+		gitCommitGrid(g, newGrid, false, false)
 	}
 	g.CPressedLastFrame = CPressedNow
 	BPressedNow := ebiten.IsKeyPressed(ebiten.KeyB)
 	if BPressedNow && !g.BPressedLastFrame {
 		newGrid := g.gridTree.grid.Clone()
-		gitCommitGrid(g, newGrid, true)
+		gitCommitGrid(g, newGrid, true, false)
 	}
 	g.BPressedLastFrame = BPressedNow
 	MPressedNow := ebiten.IsKeyPressed(ebiten.KeyM)
@@ -130,9 +140,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			g.autoScroll = false
 		}
 	}
+    if g.infoSprite.Present {
+        ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%s:\n\tHP: %d/%d\n\tDefense: %d\n\tOffense: %d", g.infoSprite.Name, g.infoSprite.HP, g.infoSprite.StartingHP, g.infoSprite.Defense, g.infoSprite.Offense), screenWidth - 110, 0)
+    }
 	drawGridTree(g, &t2, screen, 50, g.scrollX)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
-    ebitenutil.DebugPrintAt(screen, "Controls:\n\tc: commit\n\tb: new branch\n\tm: merge\n\tr: revert", screenWidth - 100, 0)
 	g.logger.Draw(screen)
 }
 

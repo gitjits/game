@@ -289,13 +289,22 @@ func (grid *TileGrid) Update(g *Game) {
 			g.selected = nil
 			fmt.Println("KILLED")
 		}
+        mx, my := ebiten.CursorPosition()
+        for j := 0; j < grid.SizeY; j++ {
+            for i := 0; i < grid.SizeX; i++ {
+                X, Y := tileScreenPos(grid, i, j)
+                r := tileRadius(grid)
+                if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
+                    g.infoSprite = grid.Tiles[j][i].occupant;
+                }
+            }
+        }
 		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 			if !grid.ClickMap["clickTile"] {
 				for j := 0; j < grid.SizeY; j++ {
 					for i := 0; i < grid.SizeX; i++ {
 						X, Y := tileScreenPos(grid, i, j)
 						r := tileRadius(grid)
-						mx, my := ebiten.CursorPosition()
 						if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
 							grid.addSelection(vec2i{x: j, y: i})
 							grid.ClickMap["clickTile"] = true
