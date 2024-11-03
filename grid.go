@@ -261,11 +261,7 @@ func (grid *TileGrid) Update(g *Game) {
 						r := tileRadius(grid)
 						mx, my := ebiten.CursorPosition()
 						if mx <= X+r && mx >= X-r && my <= Y+r && my >= Y-r {
-							grid.IsSelectedGrid = false
 							grid.addSelection(vec2i{x: j, y: i})
-							ng := grid.Clone()
-							g.selected = &ng
-							g.selected.IsSelectedGrid = true
 							grid.ClickMap["clickTile"] = true
 							/*
 								g.logger.AddMessage("you$ ", "git commit -m 'select a piece'", true)
