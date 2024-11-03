@@ -50,12 +50,12 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		// Draw main selected grid in center
 
 		// Draw small version in tree
-		faux := createGrid(offsetX, offsetY + tree.generation*110, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
+		faux := createGrid(offsetX, offsetY + tree.generation*120, tree.grid.SizeX, tree.grid.SizeY, 110, 110, tree.grid.Color)
 		faux.Tiles = tree.grid.Tiles
 		drawGrid(faux, screen)
 	} else {
 		tree.grid.X = offsetX
-		tree.grid.Y = offsetY + tree.generation*110
+		tree.grid.Y = offsetY + tree.generation*120
 		tree.grid.BoundsX = 110
 		tree.grid.BoundsY = 110
 	}

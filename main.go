@@ -48,23 +48,33 @@ func (g *Game) init() {
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
     g.grid.Update(g)
 	gitCommitGrid(g, g.grid, false)
-	commitTestData(g)
+    g.selected = &g.grid
+    g.selected.IsSelectedGrid = true
+
+	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
+    g.grid.Tiles[0][3].Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
+    g.grid.Update(g)
+	gitCommitGrid(g, g.grid, false)
+    g.selected = &g.grid
+    g.selected.IsSelectedGrid = true
+	//commitTestData(g)
 
 	// We need a simplified commit tree to efficiently render it
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-    g.logger.AddMessage("ena")
-
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("")
+    g.logger.AddMessage("ur_enemy$ git init")
+    g.logger.AddMessage("ur_enemy$ git commit -m 'welcome to the game'")
+    g.logger.AddMessage("[main e5e8386] welcome to the game")
+    g.logger.AddMessage("1 files changed, 1 insertions(+), 0 deletions(-)")
+    g.logger.AddMessage("create mode 100644 board.bson")
 	fmt.Print("Setup Git repo!\n")
 }
 
@@ -84,14 +94,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
     }
 	drawGridTree(g, &t2, screen, 50, 50)
     g.logger.Draw(screen)
-	//drawGrid(g.grid, screen)
-	// Draw each sprite.
-	// DrawImage can be called many many times, but in the implementation,
-	// the actual draw call to GPU is very few since these calls satisfy
-	// some conditions e.g. all the rendering sources and targets are same.
-	// For more detail, see:
-	// https://pkg.go.dev/github.com/hajimehoshi/ebiten/v2#Image.DrawImage
-	//w, h := ebitenImage.Bounds().Dx(), ebitenImage.Bounds().Dy()
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {

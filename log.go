@@ -46,7 +46,7 @@ func (l *LogWindow) AddMessage(msg string) {
 
 func (l *LogWindow) Draw(screen *ebiten.Image) {
     height := float64(screenHeight/5)
-    width := float64(screenHeight/2)
+    width := float64(screenWidth/2)
     sx := float64(0)
     sy := float64(screenHeight*4/5)
     for y := float64(0); y < height; y++ {
