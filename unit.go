@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand/v2"
 )
@@ -37,28 +38,36 @@ func randomPopulate(grid *TileGrid) {
 	grid.Tiles[1][3].occupant = UNIT_NEWTHANDS
 }
 
-func (self *Unit) attackEnemy(opp *Unit) {
+func reportWinner(self *Unit, opp *Unit, g *Game) {
+	var msg string
+	if self.HP > 0 {
+		msg = fmt.Sprintf("%s attacked %s and won!", self.Name, opp.Name)
+	} else if opp.HP > 0 {
+		msg = fmt.Sprintf("%s got the jump on %s and still lost!", self.Name, opp.Name)
+	} else {
+		msg = fmt.Sprintf("%s attacked %s, but they both lived!", self.Name, opp.Name)
+	}
+	g.logger.AddMessage("[!] ", msg, false)
+}
+
+func (self *Unit) attackEnemy(opp *Unit, g *Game) {
+	defer reportWinner(self, opp, g)
 	var imbalance float64 = float64(self.Offense - (opp.Defense))
-	if imbalance > overwhelm_threshold {
-		// Overwhelming power difference, attacker instantly wins
-		opp.HP = 0
-		return
-	} else if imbalance < -overwhelm_threshold {
-		// Overwhelming power difference in favor of defender, attacker loses
-		self.HP = 0
-		return
+	g.logger.AddMessage("[+] ", fmt.Sprintf("%s has a power imbalance of %f against %s", self.Name, imbalance, opp.Name), false)
+
+	lost := math.Signbit(imbalance)
+
+	// 20% chance of an underdog win, unless the difference is massive
+	random := rand.IntN(100)
+	if random > 80 && math.Abs(imbalance) < overwhelm_threshold {
+		lost = !lost
 	}
 
-	// The difference in power isn't massive, it could go either way.
-	// Any random result > 1x will result in a win, which is possible but
-	// less likely.
-	imbalanceMag := math.Abs(imbalance)
-	random := rand.IntN(int(imbalanceMag * 1.3))
-	if imbalanceMag-float64(random) < 0 {
-		// Attacker overcame odds!
-		opp.HP = 0
-	} else {
+	if lost {
 		// Attacker lost...
 		self.HP = 0
+	} else {
+		// Attacker overcame odds!
+		opp.HP = 0
 	}
 }

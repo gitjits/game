@@ -110,7 +110,7 @@ func (grid *TileGrid) clearSelection() {
 	grid.selectedCells[1] = vec2i{}
 }
 
-func (grid *TileGrid) applyMove() {
+func (grid *TileGrid) applyMove(g *Game) {
 	if !grid.selectedCells[1].valid {
 		return
 	}
@@ -132,7 +132,7 @@ func (grid *TileGrid) applyMove() {
 		source.occupant = Unit{Present: false}
 		source.Color = color.RGBA{0xFF, 0xFF, 0xFF, 0xFF}
 	} else {
-		source.occupant.attackEnemy(&target.occupant)
+		source.occupant.attackEnemy(&target.occupant, g)
 		if target.occupant.HP <= 0 {
 			// Attacker won, move into the cell
 			target.occupant = source.occupant
@@ -351,6 +351,6 @@ func (grid *TileGrid) Update(g *Game) {
 			grid.ClickMap["clickTile"] = false
 		}
 
-		grid.applyMove()
+		grid.applyMove(g)
 	}
 }
