@@ -213,24 +213,24 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
-            var R int
-            var B int
-            var G int
-            if tile.occupant.Present {
-                if tile.occupant.BotUnit {
-                    R = 255
-                    G = 0
-                    B = 0
-                } else {
-                    R = 0
-                    G = 255
-                    B = 0
-                }
-            } else {
-                R = int(tile.Color.R)
-                G = int(tile.Color.G)
-                B = int(tile.Color.B)
-            }
+			var R int
+			var B int
+			var G int
+			if tile.occupant.Present {
+				if tile.occupant.BotUnit {
+					R = 255
+					G = 0
+					B = 0
+				} else {
+					R = 0
+					G = 255
+					B = 0
+				}
+			} else {
+				R = int(tile.Color.R)
+				G = int(tile.Color.G)
+				B = int(tile.Color.B)
+			}
 			Xpos, Ypos := tileScreenPos(&grid, i, j)
 			op := &colorm.DrawImageOptions{}
 			scale := float64(float64(r) * 2.0 / 256.0)
@@ -245,10 +245,12 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 				a = 0.25
 			}
 			cm.Scale(r, g, b, a)
+			op.Filter = ebiten.FilterNearest
 			colorm.DrawImage(screen, hexagonImg, cm, op)
 
 			unitOptions := &ebiten.DrawImageOptions{}
 			unitOptions.GeoM = op.GeoM
+			unitOptions.Filter = ebiten.FilterNearest
 			if tile.occupant.Name == UNIT_LBJ.Name {
 				screen.DrawImage(LBJ_Img, unitOptions)
 			}

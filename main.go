@@ -24,17 +24,17 @@ type Game struct {
 	op     ebiten.DrawImageOptions
 	inited bool
 
-	logger            *LogWindow
-	scrollX           int
-	autoScroll        bool
-	CPressedLastFrame bool
-	BPressedLastFrame bool
-	MPressedLastFrame bool
-	RPressedLastFrame bool
+	logger              *LogWindow
+	scrollX             int
+	autoScroll          bool
+	CPressedLastFrame   bool
+	BPressedLastFrame   bool
+	MPressedLastFrame   bool
+	RPressedLastFrame   bool
 	ESCPressedLastFrame bool
 
-    infoSprite Unit
-    hidden bool
+	infoSprite Unit
+	hidden     bool
 }
 
 func (g *Game) init() {
@@ -84,16 +84,16 @@ func (g *Game) init() {
 	g.logger.AddMessage("", "", false)
 	g.logger.AddMessage("ur_enemy$ ", "git init", false)
 	g.logger.AddMessage("ur_enemy$ ", "git commit -m 'welcome to the game'", false)
-    g.logger.AddMessage("", fmt.Sprintf("[main %s] welcome to the game", g.gridTree.commitHash[0:8]), false)
+	g.logger.AddMessage("", fmt.Sprintf("[main %s] welcome to the game", g.gridTree.commitHash[0:8]), false)
 	g.logger.AddMessage("", "1 files changed, 1 insertions(+), 0 deletions(-)", false)
 	g.logger.AddMessage("", "create mode 100644 board.bson", false)
 	g.logger.AddMessage("you$ ", "git --help", false)
-    g.logger.AddMessage("[!] ", "Controls", false)
-    g.logger.AddMessage("[!] ", "esc: hide board", false)
-    g.logger.AddMessage("[!] ", "c: commit", false)
-    g.logger.AddMessage("[!] ", "b: new branch", false)
-    g.logger.AddMessage("[!] ", "m: merge", false)
-    g.logger.AddMessage("[!] ", "r: revert", false)
+	g.logger.AddMessage("[!] ", "Controls", false)
+	g.logger.AddMessage("[!] ", "esc: hide board", false)
+	g.logger.AddMessage("[!] ", "c: commit", false)
+	g.logger.AddMessage("[!] ", "b: new branch", false)
+	g.logger.AddMessage("[!] ", "m: merge", false)
+	g.logger.AddMessage("[!] ", "r: revert", false)
 	fmt.Print("Setup Git repo!\n")
 }
 
@@ -115,17 +115,17 @@ func (g *Game) Update() error {
 	g.BPressedLastFrame = BPressedNow
 	MPressedNow := ebiten.IsKeyPressed(ebiten.KeyM)
 	if MPressedNow && !g.MPressedLastFrame {
-        mergeCurrentBranch(g)
+		mergeCurrentBranch(g)
 	}
 	g.MPressedLastFrame = MPressedNow
 	RPressedNow := ebiten.IsKeyPressed(ebiten.KeyR)
 	if RPressedNow && !g.RPressedLastFrame {
-        nukeCurrentBranch(g)
+		nukeCurrentBranch(g)
 	}
 	g.RPressedLastFrame = RPressedNow
 	ESCPressedNow := ebiten.IsKeyPressed(ebiten.KeyEscape)
 	if ESCPressedNow && !g.ESCPressedLastFrame {
-        g.hidden = !g.hidden
+		g.hidden = !g.hidden
 	}
 	g.ESCPressedLastFrame = ESCPressedNow
 
@@ -149,9 +149,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			g.autoScroll = false
 		}
 	}
-    if g.infoSprite.Present {
-        ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%s:\n\tHP: %d/%d\n\tDefense: %d\n\tOffense: %d", g.infoSprite.Name, g.infoSprite.HP, g.infoSprite.StartingHP, g.infoSprite.Defense, g.infoSprite.Offense), screenWidth - 110, 0)
-    }
+	if g.infoSprite.Present {
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%s:\n\tHP: %d/%d\n\tDefense: %d\n\tOffense: %d", g.infoSprite.Name, g.infoSprite.HP, g.infoSprite.StartingHP, g.infoSprite.Defense, g.infoSprite.Offense), screenWidth-110, 0)
+	}
 	drawGridTree(g, &t2, screen, 50, g.scrollX)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
 	g.logger.Draw(screen)
