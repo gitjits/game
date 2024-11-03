@@ -60,7 +60,6 @@ func (g *Game) init() {
 	g.selected.IsSelectedGrid = true
 
 	g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 200})
-	g.grid.Tiles[0][3].Color = color.RGBA{R: 255, B: 0, G: 0, A: 255}
 	g.grid.Update(g)
 	gitCommitGrid(g, g.grid, false, true)
 	g.selected = &g.grid

@@ -195,15 +195,33 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
+            var R int
+            var B int
+            var G int
+            if tile.occupant.Present {
+                if tile.occupant.BotUnit {
+                    R = 255
+                    G = 0
+                    B = 0
+                } else {
+                    R = 0
+                    G = 255
+                    B = 0
+                }
+            } else {
+                R = int(tile.Color.R)
+                G = int(tile.Color.G)
+                B = int(tile.Color.B)
+            }
 			Xpos, Ypos := tileScreenPos(&grid, i, j)
 			op := &colorm.DrawImageOptions{}
 			scale := float64(float64(r) * 2.0 / 256.0)
 			op.GeoM.Scale(1.25*scale, scale*1.05)
 			op.GeoM.Translate(float64(Xpos-r), float64(Ypos-r))
 			var cm colorm.ColorM
-			r := float64(tile.Color.R) / 0xff
-			g := float64(tile.Color.G) / 0xff
-			b := float64(tile.Color.B) / 0xff
+			r := float64(R) / 0xff
+			g := float64(G) / 0xff
+			b := float64(B) / 0xff
 			a := 1.0
 			if grid.posSelected(vec2i{x: j, y: i}) {
 				a = 0.25
@@ -249,7 +267,7 @@ func createGrid(X int, Y int, SizeX int, SizeY int, BoundsX int, BoundsY int, de
 				}
 			} else {
 				grid.Tiles[j][i] = &Tile{
-					Color:    color.RGBA{R: 255, G: 255, B: 255, A: 255},
+					Color:    color.RGBA{R: 255, G: 127, B: 51, A: 200},
 					Selected: false,
 				}
 			}
