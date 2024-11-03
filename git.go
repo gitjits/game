@@ -126,7 +126,7 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 	return grid, err
 }
 
-func iterCommits(g *Game) GridTree {
+func buildCommitTree(g *Game) GridTree {
 	var head *GridTree // Keep track of the head of our list
 
 	worktree, err := g.repo.Worktree()
