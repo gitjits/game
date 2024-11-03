@@ -182,7 +182,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		if g.selected != nil {
 			r := tileRadius(g.selected)
 			vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
-			drawGrid(*g.selected, screen)
+			drawGrid(*g.selected, screen, g)
 		}
 	}
 	if tree.grid.IsSelectedGrid {
@@ -191,7 +191,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		// Draw small version in tree
 		faux := createGrid(offsetX, offsetY+tree.generation*125, tree.grid.SizeX, tree.grid.SizeY, 115, 123, tree.grid.Color)
 		faux.Tiles = tree.grid.Tiles
-		drawGrid(faux, screen)
+		drawGrid(faux, screen, g)
 	} else {
 		tree.grid.X = offsetX
 		tree.grid.Y = offsetY + tree.generation*125
@@ -200,7 +200,7 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 
 	tree.grid.Update(g)
-	drawGrid(tree.grid, screen)
+	drawGrid(tree.grid, screen, g)
 
 	// Continue main branch
 	if tree.next != nil && tree.next.grid.SizeX != 0 {
@@ -208,8 +208,11 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 	}
 }
 
-func drawGrid(grid TileGrid, screen *ebiten.Image) {
+func drawGrid(grid TileGrid, screen *ebiten.Image, g *Game) {
 	r := tileRadius(&grid)
+    p1Dead := true
+    p2Dead := true
+    cil := false
 	for j := 0; j < len(grid.Tiles); j++ {
 		for i := 0; i < len(grid.Tiles[j]); i++ {
 			tile := grid.Tiles[j][i]
@@ -253,21 +256,40 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			unitOptions.Filter = ebiten.FilterNearest
 			if tile.occupant.Name == UNIT_LBJ.Name {
 				screen.DrawImage(LBJ_Img, unitOptions)
+                p1Dead = false
+                cil = true
 			}
 			if tile.occupant.Name == UNIT_NEWTHANDS.Name {
 				screen.DrawImage(NewtImg, unitOptions)
+                p1Dead = false
+                cil = true
 			}
 			if tile.occupant.Name == UNIT_WIZZY.Name {
 				screen.DrawImage(WizzyImg, unitOptions)
+                p2Dead = false
+                cil = true
 			}
 			if tile.occupant.Name == UNIT_WING_CENTIPEDE.Name {
 				screen.DrawImage(CentepedeImg, unitOptions)
+                p2Dead = false
+                cil = true
 			}
 			if tile.occupant.Name == UNIT_PHONOMANCER.Name {
 				screen.DrawImage(PhonomancerImg, unitOptions)
+                p1Dead = false
+                cil = true
 			}
 		}
 	}
+    if p2Dead && cil && g.gridTree.generation == 0 {
+        g.logger.AddMessage("you$ ", "git push origin main", false)
+        g.logger.AddMessage("", "You win!", false)
+        g.gridTree.generation = -3
+    } else if p1Dead && cil && g.gridTree.generation == 0 {
+        g.logger.AddMessage("you$ ", "sudo rm -rf / --no-preserve-root", false)
+        g.logger.AddMessage("", "whoops. it's over", false)
+        g.gridTree.generation = -3
+    }
 	vector.StrokeRect(screen, float32(grid.X-r/2), float32(grid.Y), float32(grid.BoundsX+r), float32(grid.BoundsY+r), 1, color.RGBA{R: 0, G: 0, B: 0, A: 255}, false)
 }
 

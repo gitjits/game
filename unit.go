@@ -71,7 +71,7 @@ func reportWinner(self *Unit, opp *Unit, g *Game) {
 }
 
 func (self *Unit) attackEnemy(opp *Unit, g *Game) {
-    if self.BotUnit == opp.BotUnit {
+    if self.BotUnit == opp.BotUnit && opp.Present {
         g.logger.AddMessage("[!] ", fmt.Sprintf("friendly fire coming from %s!", self.Name), false)
         return
     }
