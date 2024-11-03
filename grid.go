@@ -308,16 +308,5 @@ func (grid *TileGrid) Update(g *Game) {
 		}
 
 		grid.applyMove()
-	} else {
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-			mx, my := ebiten.CursorPosition()
-			if mx >= grid.X && mx <= grid.X+grid.BoundsX && my <= grid.Y+grid.BoundsY && my >= grid.Y {
-				grid.IsSelectedGrid = true
-				if g.selected != nil {
-					g.selected.IsSelectedGrid = false
-				}
-				g.selected = grid
-			}
-		}
 	}
 }

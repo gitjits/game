@@ -55,6 +55,10 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 
 func mergeCurrentBranch(g *Game) {
     fmt.Println("merge", g.gridTree.generation)
+    if g.gridTree.generation == 0 {
+        g.logger.AddMessage("[!] ", "You cannot merge", false)
+        return
+    }
     if g.gridTree.generation - 1 > 0 {
         g.logger.AddMessage("you$ ", fmt.Sprintf("git checkout branch%d", g.gridTree.generation - 1), true)
     } else {
