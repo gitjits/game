@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"image/color"
+	"io/ioutil"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
-	"github.com/go-git/go-git/plumbing/object"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	memory "github.com/go-git/go-git/v5/storage/memory"
 	bson "gopkg.in/mgo.v2/bson"
 )
@@ -125,12 +126,14 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 	if err != nil {
 		return grid, err
 	}
+    defer file.Close()
 
-	var data []byte
-	bytes_read, err := file.Read(data)
-	_ = bytes_read
+    data, err := ioutil.ReadAll(file)
+    if err != nil {
+        return grid, err
+    }
 
-	err = bson.Unmarshal(data, grid)
+	err = bson.Unmarshal(data, &grid)
 
 	return grid, err
 }
@@ -159,14 +162,8 @@ func iterCommits(g *Game) GridTree {
 	// We need to know the initial HEAD to make sure we reset state before returning
 	initialHash := commit.Hash
 
-    commits.ForEach(func (c *object.Commit) error {
+    commits.ForEach(func(commit *object.Commit) error {
 		fmt.Print(commit)
-		commit, err = commits.Next()
-		if err != nil {
-            fmt.Println(err)
-			return err
-		}
-
 		// Revert to this specific commit
 		worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
 
@@ -176,7 +173,7 @@ func iterCommits(g *Game) GridTree {
 		output.parent = &newNode
 		grid, err := gitCurrentGrid(g)
         if err != nil {
-            fmt.Println(err)
+            fmt.Println("Error on commit2", err)
             return err
         }
 		newNode.grid = grid
