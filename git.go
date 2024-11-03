@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-    "math/rand"
 	"image/color"
+	"math/rand"
 )
 
 type GridTree struct {
@@ -82,19 +82,18 @@ func mergeCurrentBranch(g *Game) {
 }
 
 func nukeCurrentBranch(g *Game) {
-	if g.gridTree.generation == 0 {
-		// There's nothing to nuke if we're first generation.
+	if g.gridTree.grid.SizeX == 0 || g.gridTree.prev == nil || g.gridTree.prev.grid.SizeX == 0 {
+        g.logger.AddMessage("[!] ", "Can't revert", false)
 		return
-	}
+	} else {
+        g.logger.AddMessage("[!] ", "Reverting", false)
+    }
 
-	// Loop back through the nodes until we hit the previous branch
-	node := g.gridTree
-	genOG := node.generation
-	for node.generation == genOG {
-		node = *node.prev
-	}
-
-	g.gridTree = node
+    //node := g.gridTree.prev
+	//g.gridTree = *node
+    prevNode := g.gridTree.prev
+    prevNode.next = nil  // Break the circular reference
+    g.gridTree = *prevNode
 }
 
 func gitSetup(g *Game) {

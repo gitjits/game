@@ -30,6 +30,7 @@ type Game struct {
 	CPressedLastFrame bool
 	BPressedLastFrame bool
 	MPressedLastFrame bool
+	RPressedLastFrame bool
 }
 
 func (g *Game) init() {
@@ -103,6 +104,11 @@ func (g *Game) Update() error {
         mergeCurrentBranch(g)
 	}
 	g.MPressedLastFrame = MPressedNow
+	RPressedNow := ebiten.IsKeyPressed(ebiten.KeyR)
+	if RPressedNow && !g.RPressedLastFrame {
+        nukeCurrentBranch(g)
+	}
+	g.RPressedLastFrame = RPressedNow
 
 	return nil
 }
