@@ -127,6 +127,8 @@ func drawGridTree(g *Game, tree *GridTree, screen *ebiten.Image, offsetY, offset
 		g.selected.BoundsX = 310
 		g.selected.BoundsY = 340
 		g.selected.Update(g)
+        r := tileRadius(g.selected)
+        vector.DrawFilledRect(screen, float32(g.selected.X-r/2), float32(g.selected.Y), float32(g.selected.BoundsX+r), float32(g.selected.BoundsY+r), color.RGBA{0, 0, 0, 100}, false)
 		if g.selected != nil {
 			drawGrid(*g.selected, screen)
 		}
