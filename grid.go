@@ -33,16 +33,21 @@ type TileGrid struct {
 func drawGridTree(startTree *GridTree, screen *ebiten.Image, offsetY int) {
     tree := startTree
     offsetX := 0
-    for tree.next != nil {
+    for tree != nil {
         if tree.branch != nil {
             //drawGridTree(tree, screen, offsetY + 60)
         }
 	//g.grid = createGrid(0, 0, 9, 9, screenWidth/2, screenHeight/2, color.RGBA{R: 255, B: 255, G: 255, A: 1})
+        tree.grid.X = offsetX
+        tree.grid.Y = offsetY
+        tree.grid.BoundsX = 50
+        tree.grid.BoundsY = 50
+        tree.grid.Update()
         drawGrid(tree.grid, screen)
-        fmt.Println("Drawing", tree.grid)
+        //fmt.Println("Drawing", tree.grid)
+        fmt.Println(tree.grid)
         tree = tree.next
         offsetX += 60
-        break
     }
 }
 
@@ -52,6 +57,7 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			tile := grid.Tiles[j][i]
 			if !tile.Selected {
 				drawPolygon(6, tile.X+grid.X, tile.Y+grid.Y, tile.Radius, tile.Color, screen)
+                fmt.Println(6, tile.X+grid.X, tile.Y+grid.Y, tile.Radius, tile.Color)
 			}
 		}
 	}

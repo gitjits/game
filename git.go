@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"image/color"
-	"io/ioutil"
+	"io"
 
 	memfs "github.com/go-git/go-billy/v5/memfs"
 	git "github.com/go-git/go-git/v5"
@@ -99,16 +99,6 @@ func gitSetup(g *Game) bool {
 	file.Write(bytes)
 	file.Close()
 
-	// Commit initial game state to current branch
-	worktree, err := g.repo.Worktree()
-	if err != nil {
-		fmt.Printf("Error opening worktree: %v\n", err)
-		return false
-	}
-	worktree.Add(gridFileName)
-	worktree.Commit("Initial commit", &git.CommitOptions{})
-	worktree.Commit("commit 2", &git.CommitOptions{})
-	worktree.Commit("commit 3", &git.CommitOptions{})
 	err = createTestData(g.repo)
 	if err != nil {
 		fmt.Printf("Error creating test data: %v\n", err)
@@ -128,7 +118,7 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 	}
     defer file.Close()
 
-    data, err := ioutil.ReadAll(file)
+    data, err := io.ReadAll(file)
     if err != nil {
         return grid, err
     }
@@ -139,53 +129,51 @@ func gitCurrentGrid(g *Game) (TileGrid, error) {
 }
 
 func iterCommits(g *Game) GridTree {
-	var output GridTree
+    var head *GridTree // Keep track of the head of our list
 
-	commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
-	if err != nil {
-		fmt.Print("Error getting log iterator: ", err, "\n")
-		return output
-	}
+    commits, err := g.repo.Log(&git.LogOptions{Order: git.LogOrderCommitterTime})
+    if err != nil {
+        fmt.Print("Error getting log iterator: ", err, "\n")
+        return GridTree{}
+    }
 
-	worktree, err := g.repo.Worktree()
-	if err != nil {
-		fmt.Print("Error getting current worktree!", err, "\n")
-		return output
-	}
+    worktree, err := g.repo.Worktree()
+    if err != nil {
+        fmt.Print("Error getting current worktree!", err, "\n")
+        return GridTree{}
+    }
 
-	commit, err := commits.Next()
-	if err != nil {
-		fmt.Print("Error first commit: ", err, "\n")
-		return output
-	}
-
-	// We need to know the initial HEAD to make sure we reset state before returning
-	initialHash := commit.Hash
+    initialHash := plumbing.Hash{}
+    emptyHash := plumbing.Hash{}
 
     commits.ForEach(func(commit *object.Commit) error {
-		fmt.Print(commit)
-		// Revert to this specific commit
-		worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
+        if initialHash == emptyHash {
+            initialHash = commit.Hash
+        }
 
-		// Read grid data at this commit and update tree
-		var newNode GridTree
-		newNode.next = &output
-		output.parent = &newNode
-		grid, err := gitCurrentGrid(g)
+        worktree.Checkout(&git.CheckoutOptions{Hash: commit.Hash})
+
+        newNode := &GridTree{}
+
+        grid, err := gitCurrentGrid(g)
         if err != nil {
             fmt.Println("Error on commit2", err)
             return err
         }
-		newNode.grid = grid
+        newNode.grid = grid
 
-		// Update root node
-		output = newNode
+        // Link the new node properly
+        if head != nil {
+            newNode.next = head
+            head.parent = newNode
+        }
+        head = newNode
+
         return nil
-	})
+    })
 
-	// Revert back to the original HEAD
-	worktree.Checkout(&git.CheckoutOptions{Hash: initialHash})
-	return output
+    worktree.Checkout(&git.CheckoutOptions{Hash: initialHash})
+    return *head
 }
 
 func createTestData(repo *git.Repository) error {
@@ -220,7 +208,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Create initial commit on main
-    _, err = createCommit("Initial commit on main", color.RGBA{R: 255, B: 255, G: 255})
+    _, err = createCommit("Initial commit on main", color.RGBA{R: 255, B: 255, G: 255, A: 1})
 	fmt.Print("Created a commit\n")
 	if err != nil {
 		return err
@@ -236,11 +224,11 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commits to feature1
-	_, err = createCommit("First commit on feature1", color.RGBA{R: 255, B: 0, G: 0})
+    _, err = createCommit("First commit on feature1", color.RGBA{R: 255, B: 0, G: 0, A: 1})
 	if err != nil {
 		return err
 	}
-	_, err = createCommit("Second commit on feature1", color.RGBA{R: 0, B: 0, G: 255})
+    _, err = createCommit("Second commit on feature1", color.RGBA{R: 0, B: 0, G: 255, A: 1})
 	if err != nil {
 		return err
 	}
@@ -251,7 +239,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add more commits to main
-	_, err = createCommit("Second commit on main", color.RGBA{R: 0, B: 255, G: 255})
+    _, err = createCommit("Second commit on main", color.RGBA{R: 0, B: 255, G: 255, A: 1})
 	if err != nil {
 		return err
 	}
@@ -266,7 +254,7 @@ func createTestData(repo *git.Repository) error {
 	}
 
 	// Add commit to feature2
-	_, err = createCommit("First commit on feature2", color.RGBA{R: 255, B: 0, G: 255})
+    _, err = createCommit("First commit on feature2", color.RGBA{R: 255, B: 0, G: 255, A: 1})
 	if err != nil {
 		return err
 	}
@@ -275,7 +263,7 @@ func createTestData(repo *git.Repository) error {
 	if err := CheckoutBranch(repo, "master"); err != nil {
 		return err
 	}
-	_, err = createCommit("Third commit on main", color.RGBA{R: 255, B: 255, G: 0})
+    _, err = createCommit("Third commit on main", color.RGBA{R: 255, B: 255, G: 0, A: 1})
 	if err != nil {
 		return err
 	}
