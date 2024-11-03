@@ -16,6 +16,9 @@ type GridTree struct {
 
 func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	old := g.gridTree
+	if old.prev != nil {
+		old.prev.next = &old
+	}
 	node := GridTree{
 		grid:       grid,
 		prev:       &old,
@@ -25,9 +28,9 @@ func gitCommitGrid(g *Game, grid TileGrid, branch bool) string {
 	if branch {
 		node.generation++
 	}
-	old.next = &node
 	g.gridTree = node
-	fmt.Printf("prev node %p, replacing with %p. old's next is %p, gen %d\n", &old, &node, node.prev.next, node.generation)
+	old.next = &g.gridTree
+	fmt.Printf("prev node %p, replacing with %p. old's next is %p, gen %d\n", &old, &node, node.prev.next)
 
 	return "blah"
 }
