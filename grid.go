@@ -20,14 +20,20 @@ var hexagonImg *ebiten.Image
 var LBJPNG []byte
 var LBJ_Img *ebiten.Image
 
+//go:embed newt.png
+var NewtPNG []byte
+var NewtImg *ebiten.Image
+
 func loadEmbeddedImage() (err error) {
 	hi, _, err := image.Decode(bytes.NewReader(hexagonPng))
 	lbj_img, _, err := image.Decode(bytes.NewReader(LBJPNG))
+	newt_img, _, err := image.Decode(bytes.NewReader(NewtPNG))
 	if err != nil {
 		return err
 	}
 	hexagonImg = ebiten.NewImageFromImage(hi)
 	LBJ_Img = ebiten.NewImageFromImage(lbj_img)
+	NewtImg = ebiten.NewImageFromImage(newt_img)
 	return nil
 }
 
@@ -187,6 +193,9 @@ func drawGrid(grid TileGrid, screen *ebiten.Image) {
 			unitOptions.GeoM = op.GeoM
 			if tile.occupant.Name == UNIT_LBJ.Name {
 				screen.DrawImage(LBJ_Img, unitOptions)
+			}
+			if tile.occupant.Name == UNIT_NEWTHANDS.Name {
+				screen.DrawImage(NewtImg, unitOptions)
 			}
 		}
 	}
