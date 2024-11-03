@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"image/color"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 var (
@@ -83,6 +85,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		t2 = *t2.prev
 	}
 	drawGridTree(g, &t2, screen, 50, 50)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %f", ebiten.ActualFPS()))
 	g.logger.Draw(screen)
 }
 

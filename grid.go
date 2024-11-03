@@ -197,19 +197,19 @@ func (grid *TileGrid) Update(g *Game) {
 			source := grid.Tiles[pos1.x][pos1.y]
 			target := grid.Tiles[pos2.x][pos2.y]
 
-			if !source.occupant.present {
+			if !source.occupant.Present {
 				// No one's here, they can just move.
 				target.occupant = source.occupant
-				source.occupant = Unit{present: false}
+				source.occupant = Unit{Present: false}
 			} else {
 				source.occupant.attackEnemy(&target.occupant)
-				if target.occupant.hp <= 0 {
+				if target.occupant.HP <= 0 {
 					// Attacker won, move into the cell
 					target.occupant = source.occupant
-					source.occupant = Unit{present: false}
-				} else if source.occupant.hp <= 0 {
+					source.occupant = Unit{Present: false}
+				} else if source.occupant.HP <= 0 {
 					// Attacker lost, delete them
-					source.occupant = Unit{present: false}
+					source.occupant = Unit{Present: false}
 				}
 			}
 

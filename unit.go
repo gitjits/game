@@ -7,36 +7,39 @@ const (
 )
 
 type Unit struct {
-	move_range int
-	hp         int
-	offense    int
-	defense    int
+	Name      string
+	MoveRange int
+	HP        int
+	Offense   int
+	Defense   int
 
-	offense_bonus int
-	defense_bonus int
+	OffenseBonus int
+	DefenseBonus int
 
 	// This is my replacement for an Optional<Unit> type, when going through
-	// the grid we can do "if unit.present {".
-	present bool
+	// the grid we can do "if unit.Present {".
+	Present bool
 }
 
+var UNIT_PHONOMANCER Unit = Unit{Name: "Phonomancer", MoveRange: 3, HP: 5, Offense: 6, Defense: 2, Present: true}
+
 func (self *Unit) attackEnemy(opp *Unit) {
-	var fucked_level int = self.offense - (opp.defense + opp.defense_bonus)
+	var fucked_level int = self.Offense - (opp.Defense + opp.DefenseBonus)
 	if fucked_level > overwhelm_threshold {
 		// Overwhelming power difference, attacker instantly wins
-		opp.hp = 0
+		opp.HP = 0
 		return
 	} else if fucked_level < -overwhelm_threshold {
 		// Overwhelming power difference in favor of defender, attacker loses
-		self.hp = 0
+		self.HP = 0
 		return
 	}
 
 	// The difference in power isn't massive, it could go either way
 	var winner = rand.IntN(fucked_level) - (fucked_level / 2)
 	if winner > 0 {
-		opp.hp = 0
+		opp.HP = 0
 	} else {
-		self.hp = 0
+		self.HP = 0
 	}
 }
